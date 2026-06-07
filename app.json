@@ -1,0 +1,49 @@
+{
+  "pages": [
+    "pages/today/today",
+    "pages/inventory/inventory",
+    "pages/stats/stats",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "navigationBarTitleText": "护肤记录",
+    "navigationBarBackgroundColor": "#FAF9F6",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FAF9F6"
+  },
+  "tabBar": {
+    "color": "#C7CCD1",
+    "selectedColor": "#3B82F6",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/today/today",
+        "text": "今日",
+        "iconPath": "assets/icons/today.png",
+        "selectedIconPath": "assets/icons/today-active.png"
+      },
+      {
+        "pagePath": "pages/inventory/inventory",
+        "text": "库存",
+        "iconPath": "assets/icons/inventory.png",
+        "selectedIconPath": "assets/icons/inventory-active.png"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "回看",
+        "iconPath": "assets/icons/review.png",
+        "selectedIconPath": "assets/icons/review-active.png"
+      },
+      {
+        "pagePath": "pages/settings/settings",
+        "text": "我的",
+        "iconPath": "assets/icons/my.png",
+        "selectedIconPath": "assets/icons/my-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

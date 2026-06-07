@@ -1,0 +1,84 @@
+<view class="page review-page">
+  <view class="page-head">
+    <view class="page-title">本周回看</view>
+    <view class="page-date">{{rangeText}}</view>
+  </view>
+
+  <view class="segmented review-tabs">
+    <view wx:for="{{tabs}}" wx:key="value" class="segmented-item {{activeTab === item.value ? 'segmented-item-active' : ''}}" data-value="{{item.value}}" bindtap="switchTab" hover-class="tap-hover">
+      <text class="tab-icon">{{item.icon}}</text>
+      <text>{{item.label}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{activeTab === '3days'}}" class="recent-list">
+    <view class="day-card card" wx:for="{{threeDays}}" wx:key="date">
+      <view class="day-head">
+        <view class="day-title">{{item.label}}</view>
+        <view class="day-date">{{item.shortDate}}</view>
+      </view>
+      <view wx:if="{{item.count}}">
+        <view class="slot-block" wx:if="{{item.morning.length}}">
+          <view class="slot-icon sun">☀</view>
+          <view class="slot-list">
+            <view class="slot-row" wx:for="{{item.morning}}" wx:key="id">
+              <text>{{item.productNameSnapshot}}</text>
+              <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="slot-block" wx:if="{{item.evening.length}}">
+          <view class="slot-icon moon">☾</view>
+          <view class="slot-list">
+            <view class="slot-row" wx:for="{{item.evening}}" wx:key="id">
+              <text>{{item.productNameSnapshot}}</text>
+              <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="empty-line" wx:else>这天还没有记录</view>
+    </view>
+  </view>
+
+  <view wx:if="{{activeTab === 'week'}}">
+    <view class="week-card card" wx:if="{{week.rows.length}}">
+      <view class="week-head">
+        <view class="week-title">本周使用概览</view>
+        <view class="week-range">{{week.start}} - {{week.end}}</view>
+      </view>
+      <view class="week-grid-head">
+        <view class="product-col">产品名称</view>
+        <view class="day-cols">
+          <view wx:for="{{week.days}}" wx:key="date" class="day-col {{item.isToday ? 'today-col' : ''}}">{{item.label}}</view>
+        </view>
+      </view>
+      <view class="week-row" wx:for="{{week.rows}}" wx:key="productName">
+        <view class="product-col product-name">{{item.productName}}</view>
+        <view class="day-cols">
+          <view wx:for="{{item.cells}}" wx:key="date" class="day-col">
+            <view class="usage-dot {{item.used ? 'usage-dot-on' : ''}}"></view>
+          </view>
+        </view>
+      </view>
+      <view class="week-summary">
+        <view class="summary-kicker">最近 3 天总结</view>
+        <view class="summary-grid">
+          <view class="summary-box">
+            <view class="summary-value">{{week.recordCount}}</view>
+            <view class="summary-label">记录天次</view>
+          </view>
+          <view class="summary-box">
+            <view class="summary-value">{{week.productCount}}</view>
+            <view class="summary-label">使用产品</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="card empty-state" wx:else>
+      <view class="empty-title">本周还没有记录</view>
+      <view class="empty-text">先在今日页记录几次使用，这里会自动生成使用概览。</view>
+      <button class="primary empty-action" hover-class="button-hover" bindtap="goToday">去记录</button>
+    </view>
+  </view>
+</view>

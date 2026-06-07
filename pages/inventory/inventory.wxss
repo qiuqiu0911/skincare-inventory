@@ -1,0 +1,229 @@
+.inventory-page {
+  min-height: 100vh;
+}
+
+.page-head {
+  padding: 44rpx 18rpx 34rpx;
+}
+
+.page-title {
+  color: #333333;
+  font-size: 50rpx;
+  font-weight: 750;
+  line-height: 62rpx;
+}
+
+.inventory-tabs {
+  margin: 0 18rpx 18rpx;
+  border-radius: 24rpx;
+}
+
+.inventory-status-note {
+  margin: 0 22rpx 22rpx;
+  color: #9ca3af;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+.stock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.stock-card {
+  padding: 30rpx;
+  border-radius: 28rpx;
+}
+
+.stock-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.stock-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.stock-name {
+  color: #333333;
+  font-size: 29rpx;
+  font-weight: 700;
+  line-height: 40rpx;
+  word-break: break-all;
+}
+
+.stock-meta {
+  margin-top: 6rpx;
+  color: #9ca3af;
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+
+.stock-right {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+
+.icon-button {
+  min-width: 44rpx;
+  min-height: 44rpx;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 24rpx;
+  line-height: 44rpx;
+}
+
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 21rpx;
+  font-weight: 700;
+  line-height: 40rpx;
+}
+
+.stock-pill-active {
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.stock-pill-finished {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.stock-foot {
+  margin-top: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.stock-dates {
+  flex: 1;
+  min-width: 0;
+  color: #9ca3af;
+  font-size: 22rpx;
+  font-style: italic;
+  line-height: 32rpx;
+}
+
+.stock-actions {
+  display: flex;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+.empty-record {
+  height: 320rpx;
+  margin: 12rpx 4rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.bottom-action {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 126rpx;
+  padding: 0 48rpx;
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+.add-stock-button {
+  width: 100%;
+  border-radius: 30rpx;
+  min-height: 84rpx;
+}
+
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  max-height: 90vh;
+  padding: 44rpx 38rpx 42rpx;
+  border-radius: 64rpx 64rpx 0 0;
+  background: #ffffff;
+  box-shadow: 0 -16rpx 48rpx rgba(17, 24, 39, 0.12);
+  box-sizing: border-box;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28rpx;
+}
+
+.sheet-title {
+  color: #333333;
+  font-size: 40rpx;
+  font-weight: 750;
+  line-height: 50rpx;
+}
+
+.close-button {
+  min-width: 64rpx;
+  min-height: 64rpx;
+  border-radius: 999rpx;
+  background: #f9fafb;
+  color: #9ca3af;
+  font-size: 40rpx;
+  line-height: 64rpx;
+}
+
+.form-grid {
+  display: flex;
+  gap: 20rpx;
+}
+
+.form-grid-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-grid-side {
+  width: 180rpx;
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 18rpx;
+  padding-top: 12rpx;
+}
+
+.sheet-actions button {
+  flex: 1;
+}

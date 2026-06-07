@@ -1,0 +1,391 @@
+page {
+  min-height: 100vh;
+  background: #faf9f6;
+  color: #333333;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+
+.page {
+  padding: 42rpx 32rpx 176rpx;
+  box-sizing: border-box;
+}
+
+.section {
+  margin-bottom: 36rpx;
+}
+
+.section-heading {
+  margin-bottom: 18rpx;
+}
+
+.section-title {
+  color: #333333;
+  font-size: 34rpx;
+  line-height: 44rpx;
+  font-weight: 700;
+}
+
+.section-subtitle {
+  margin-top: 6rpx;
+  color: #6e6e73;
+  font-size: 25rpx;
+  line-height: 36rpx;
+}
+
+.card {
+  background: #ffffff;
+  border: 1rpx solid rgba(17, 24, 39, 0.055);
+  border-radius: 32rpx;
+  padding: 30rpx;
+  box-shadow: 0 10rpx 30rpx rgba(17, 24, 39, 0.035);
+  box-sizing: border-box;
+}
+
+.card-soft {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(60, 60, 67, 0.1);
+  box-shadow: none;
+}
+
+.card-highlight {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.06);
+}
+
+.muted {
+  color: #6e6e73;
+}
+
+.field {
+  margin-bottom: 22rpx;
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: block;
+  color: #3a3a3c;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 36rpx;
+  margin-bottom: 10rpx;
+}
+
+.field-hint {
+  margin-top: 8rpx;
+  color: #8e8e93;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+.field-error {
+  margin-top: 8rpx;
+  color: #ff3b30;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+input,
+picker {
+  min-height: 88rpx;
+  border: 1rpx solid rgba(17, 24, 39, 0.055);
+  border-radius: 22rpx;
+  padding: 0 24rpx;
+  background: #f9fafb;
+  box-sizing: border-box;
+  color: #333333;
+  font-size: 28rpx;
+}
+
+.input-error {
+  border-color: #e3a097;
+  background: #fff8f6;
+}
+
+.picker-value,
+.picker-row {
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  color: #1c1c1e;
+  font-size: 28rpx;
+  line-height: 38rpx;
+}
+
+.picker-placeholder,
+.chevron {
+  color: #8a9892;
+}
+
+.button-row {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  min-height: 76rpx;
+  border-radius: 18rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 76rpx;
+  border: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+button::after {
+  border: 0;
+}
+
+button[disabled] {
+  opacity: 0.48;
+}
+
+button.primary {
+  background: #111827;
+  color: #ffffff;
+  box-shadow: 0 10rpx 22rpx rgba(17, 24, 39, 0.16);
+}
+
+button.secondary {
+  background: rgba(17, 24, 39, 0.06);
+  color: #111827;
+}
+
+button.danger {
+  background: #fff2f2;
+  color: #ff3b30;
+}
+
+.button-hover,
+.tap-hover {
+  opacity: 0.72;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46rpx;
+  padding: 0 18rpx;
+  margin-right: 10rpx;
+  margin-top: 10rpx;
+  border-radius: 999rpx;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 46rpx;
+}
+
+.pill-warm {
+  background: rgba(255, 149, 0, 0.14);
+  color: #a05a00;
+}
+
+.pill-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+.pill-muted {
+  background: rgba(118, 118, 128, 0.12);
+  color: #6e6e73;
+}
+
+.list-item {
+  border-top: 1rpx solid #edf2ef;
+  padding: 24rpx 0;
+}
+
+.list-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.list-item:last-child {
+  padding-bottom: 0;
+}
+
+.item-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  color: #1c1c1e;
+  font-size: 30rpx;
+  font-weight: 650;
+  line-height: 42rpx;
+  word-break: break-all;
+}
+
+.item-meta {
+  margin-top: 6rpx;
+  color: #6e6e73;
+  font-size: 25rpx;
+  line-height: 36rpx;
+}
+
+.item-tags {
+  margin-top: 8rpx;
+}
+
+.item-actions {
+  margin-top: 18rpx;
+}
+
+.mini-button {
+  min-height: 60rpx;
+  line-height: 60rpx;
+  padding-left: 22rpx;
+  padding-right: 22rpx;
+  border-radius: 18rpx;
+  font-size: 24rpx;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 38rpx 24rpx;
+}
+
+.empty-title {
+  color: #333333;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 42rpx;
+}
+
+.empty-text {
+  margin-top: 10rpx;
+  color: #6e6e73;
+  font-size: 25rpx;
+  line-height: 38rpx;
+}
+
+.empty-action {
+  min-width: 200rpx;
+  display: inline-flex;
+  justify-content: center;
+  margin-top: 24rpx;
+  padding-left: 34rpx;
+  padding-right: 34rpx;
+}
+
+.segmented {
+  display: flex;
+  gap: 8rpx;
+  padding: 8rpx;
+  border-radius: 24rpx;
+  background: #f3f4f6;
+  box-sizing: border-box;
+}
+
+.segmented-item {
+  flex: 1;
+  min-height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  color: #6b7280;
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.segmented-item-active {
+  background: #ffffff;
+  color: #333333;
+  box-shadow: 0 6rpx 18rpx rgba(17, 24, 39, 0.08);
+}
+
+.metric-grid {
+  display: flex;
+  gap: 16rpx;
+}
+
+.metric-card {
+  flex: 1;
+  min-width: 0;
+  border-radius: 22rpx;
+  padding: 22rpx 18rpx;
+  background: rgba(255, 255, 255, 0.7);
+  box-sizing: border-box;
+}
+
+.metric-label {
+  color: #6e6e73;
+  font-size: 23rpx;
+  line-height: 32rpx;
+}
+
+.metric-value {
+  margin-top: 8rpx;
+  color: #1c1c1e;
+  font-size: 34rpx;
+  font-weight: 750;
+  line-height: 42rpx;
+  word-break: break-all;
+}
+
+.bar-track {
+  height: 14rpx;
+  margin-top: 16rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: #e6eee9;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #3b82f6;
+}
+
+.delta-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46rpx;
+  margin-top: 10rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 650;
+  line-height: 46rpx;
+}
+
+.delta-up {
+  color: #007aff;
+}
+
+.delta-down {
+  color: #ff3b30;
+}
+
+.delta-same {
+  color: #6e6e73;
+}
+
+.delta-badge.delta-up {
+  background: #e7f6f0;
+}
+
+.delta-badge.delta-down {
+  background: #fff2f2;
+}
+
+.delta-badge.delta-same {
+  background: #f1f4f2;
+}

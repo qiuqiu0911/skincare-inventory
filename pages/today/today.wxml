@@ -1,0 +1,89 @@
+<view class="page today-page">
+  <view class="page-head">
+    <view>
+      <view class="page-title">护肤打卡</view>
+      <view class="page-date">{{today}}</view>
+    </view>
+  </view>
+
+  <view class="segmented time-tabs">
+    <view wx:for="{{timeOptions}}" wx:key="value" class="segmented-item {{activeTime === item.value ? 'segmented-item-active' : ''}}" data-value="{{item.value}}" bindtap="switchTime" hover-class="tap-hover">
+      <text class="time-icon {{item.value === 'morning' ? 'time-icon-sun' : 'time-icon-moon'}}">{{item.icon}}</text>
+      <text>{{item.fullLabel}}</text>
+    </view>
+  </view>
+
+  <view class="record-card card" wx:if="{{activeRecords.length}}">
+    <view class="record-card-head">
+      <text class="record-count">已记录 {{activeRecords.length}} 项</text>
+    </view>
+    <view class="record-row" wx:for="{{activeRecords}}" wx:key="id">
+      <view class="record-name">{{item.productNameSnapshot}}</view>
+      <view class="record-side">
+        <text class="record-amount">{{item.amount || '适量'}}</text>
+        <view class="icon-button" aria-role="button" aria-label="编辑记录" data-id="{{item.id}}" bindtap="editRecord">↗</view>
+        <view class="icon-button danger-icon" aria-role="button" aria-label="删除记录" data-id="{{item.id}}" bindtap="deleteRecord">×</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-record" wx:else>
+    <view class="empty-title">还没有记录</view>
+    <view class="empty-text">添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录后，会进入今天和回看统计。</view>
+  </view>
+
+  <view class="bottom-action">
+    <button class="add-dashed" hover-class="tap-hover" bindtap="openCreateForm">
+      <view class="add-icon">+</view>
+      <view>添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录</view>
+    </button>
+  </view>
+
+  <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>
+  <view class="bottom-sheet" wx:if="{{showForm}}">
+    <view class="sheet-head">
+      <view class="sheet-title">{{editingId ? '编辑护肤记录' : '添加护肤记录'}}</view>
+      <button class="close-button" size="mini" bindtap="closeForm">×</button>
+    </view>
+
+    <view class="segmented sheet-time-tabs">
+      <view wx:for="{{timeOptions}}" wx:key="value" class="segmented-item {{form.timeOfDay === item.value ? 'segmented-item-active' : ''}}" data-value="{{item.value}}" bindtap="switchFormTime" hover-class="tap-hover">
+        <text class="time-icon {{item.value === 'morning' ? 'time-icon-sun' : 'time-icon-moon'}}">{{item.icon}}</text>
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">分类</text>
+      <picker range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategoryPick">
+        <view class="picker-row {{formErrors.categoryName ? 'input-error' : ''}}">
+          <text>{{form.categoryName}}</text>
+          <text class="chevron">选择 ›</text>
+        </view>
+      </picker>
+      <view class="field-error" wx:if="{{formErrors.categoryName}}">{{formErrors.categoryName}}</view>
+    </view>
+
+    <view class="field">
+      <view class="field-line">
+        <text class="field-label">产品名称</text>
+        <picker wx:if="{{productOptions.length}}" range="{{productOptions}}" bindchange="onProductPick">
+          <view class="history-chip">从历史选择</view>
+        </picker>
+      </view>
+      <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：小棕瓶精华" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
+      <view class="field-error" wx:if="{{formErrors.productName}}">{{formErrors.productName}}</view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">用量（可选）</text>
+      <input class="{{formErrors.amount ? 'input-error' : ''}}" placeholder="例如：2 滴、一泵" value="{{form.amount}}" data-field="amount" bindinput="onInput" />
+      <view class="field-error" wx:if="{{formErrors.amount}}">{{formErrors.amount}}</view>
+    </view>
+
+    <view class="sheet-actions">
+      <button class="secondary" bindtap="closeForm">{{editingId ? '取消' : '完成'}}</button>
+      <button class="primary" disabled="{{!canSubmit || submitting}}" bindtap="submitRecord">{{submitting ? '保存中...' : '保存'}}</button>
+    </view>
+  </view>
+</view>

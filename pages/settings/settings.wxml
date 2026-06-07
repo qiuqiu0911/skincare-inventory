@@ -1,0 +1,47 @@
+<view class="page my-page">
+  <view class="page-head">
+    <view class="page-title">分类管理</view>
+    <view class="page-subtitle">管理护肤品和化妆品的分类</view>
+  </view>
+
+  <view class="category-form card">
+    <view class="category-input-row">
+      <input class="category-input {{categoryError ? 'input-error' : ''}}" maxlength="12" placeholder="输入分类名称" value="{{categoryName}}" bindinput="onCategoryInput" />
+      <view class="add-category {{canSubmit && !submitting ? 'add-category-active' : 'add-category-disabled'}}" hover-class="button-hover" bindtap="addCategory">{{submitting ? '保存中' : '添加'}}</view>
+    </view>
+    <view class="field-error form-error" wx:if="{{categoryError}}">{{categoryError}}</view>
+  </view>
+
+  <view class="category-list card" wx:if="{{categories.length}}">
+    <view class="category-row" wx:for="{{categories}}" wx:key="id">
+      <view class="category-left">
+        <text class="tag-icon"></text>
+        <text class="category-name">{{item.name}}</text>
+      </view>
+      <view class="delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" aria-role="button" aria-label="删除分类" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="deleteCategory">
+        <view class="delete-line delete-line-a"></view>
+        <view class="delete-line delete-line-b"></view>
+      </view>
+    </view>
+  </view>
+  <view class="card empty-state" wx:else>
+    <view class="empty-title">还没有分类</view>
+    <view class="empty-text">添加常用分类后，记录产品会更快。</view>
+  </view>
+
+  <view class="my-tip">提示：仅可删除未被任何护肤记录或库存使用的分类，且至少需要保留一个分类。</view>
+
+  <view class="data-note card card-soft">
+    <view class="item-title">数据保存在本机</view>
+    <view class="item-meta">记录、库存和分类使用微信小程序本地存储持久化；不卸载小程序、不清理微信缓存时可长期保留。</view>
+  </view>
+
+  <view class="backup-card card">
+    <view class="item-title">备份与恢复</view>
+    <view class="item-meta">导出 JSON 备份文件，换设备或清理缓存后可从文件恢复。</view>
+    <view class="backup-actions">
+      <view class="backup-button backup-button-primary" bindtap="exportData">导出数据</view>
+      <view class="backup-button" bindtap="importData">导入数据</view>
+    </view>
+  </view>
+</view>

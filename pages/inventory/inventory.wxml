@@ -1,0 +1,104 @@
+<view class="page inventory-page">
+  <view class="page-head">
+    <view class="page-title">产品库存</view>
+  </view>
+
+  <view class="segmented inventory-tabs">
+    <view wx:for="{{statusTabs}}" wx:key="value" class="segmented-item {{status === item.value ? 'segmented-item-active' : ''}}" data-status="{{item.value}}" bindtap="switchStatus" hover-class="tap-hover">
+      {{item.label}} ({{item.count}})
+    </view>
+  </view>
+
+  <view class="inventory-status-note">{{statusNote}}</view>
+
+  <view class="stock-list" wx:if="{{stocks.length}}">
+    <view class="stock-card card" wx:for="{{stocks}}" wx:key="id">
+      <view class="stock-head">
+        <view class="stock-main">
+          <view class="stock-name">{{item.productNameSnapshot}}</view>
+          <view class="stock-meta">分类: {{item.categoryNameSnapshot}} | {{item.capacitySnapshot || '不详'}} · {{item.quantity}} 件</view>
+        </view>
+        <view class="stock-right">
+          <view class="icon-button" aria-role="button" aria-label="编辑库存" data-id="{{item.id}}" bindtap="editStock">↗</view>
+          <text class="stock-pill {{item.status === 'active' ? 'stock-pill-active' : item.status === 'finished' ? 'stock-pill-finished' : ''}}">
+            {{item.status === 'stocked' ? '囤货' : item.status === 'active' ? '使用中' : '已用完'}}
+          </text>
+        </view>
+      </view>
+      <view class="stock-foot">
+        <view class="stock-dates">
+          <text wx:if="{{item.expiryDateSnapshot && item.status === 'stocked'}}">到期: {{item.expiryDateSnapshot}}</text>
+          <text wx:if="{{item.openedDate && item.status === 'active'}}">开瓶: {{item.openedDate}}</text>
+          <text wx:if="{{item.finishedDate && item.status === 'finished'}}">空瓶: {{item.finishedDate}}</text>
+        </view>
+        <view class="stock-actions">
+          <button wx:if="{{item.status === 'stocked'}}" class="primary mini-button" size="mini" disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" bindtap="openStock">记录开瓶</button>
+          <button wx:if="{{item.status === 'stocked'}}" class="danger mini-button" size="mini" disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" bindtap="deleteStock">删除</button>
+          <button wx:if="{{item.status === 'active'}}" class="primary mini-button" size="mini" disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" bindtap="finishStock">标记用完</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-record" wx:else>
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-text">{{emptyText}}</view>
+  </view>
+
+  <view class="bottom-action">
+    <button class="primary add-stock-button" hover-class="button-hover" bindtap="openCreateForm">＋ 新增库存</button>
+  </view>
+
+  <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>
+  <view class="bottom-sheet" wx:if="{{showForm}}">
+    <view class="sheet-head">
+      <view class="sheet-title">{{editingStockId ? '编辑库存' : '添加库存'}}</view>
+      <button class="close-button" size="mini" bindtap="closeForm">×</button>
+    </view>
+
+    <view class="field">
+      <text class="field-label">产品名称</text>
+      <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：神仙水" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
+      <view class="field-error" wx:if="{{formErrors.productName}}">{{formErrors.productName}}</view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">分类</text>
+      <picker range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategoryPick">
+        <view class="picker-row">
+          <text>{{form.categoryName}}</text>
+          <text class="chevron">选择 ›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-grid">
+      <view class="field form-grid-main">
+        <text class="field-label">规格容量</text>
+        <input class="{{formErrors.capacity ? 'input-error' : ''}}" placeholder="如：150ml" value="{{form.capacity}}" data-field="capacity" bindinput="onInput" />
+        <view class="field-error" wx:if="{{formErrors.capacity}}">{{formErrors.capacity}}</view>
+      </view>
+      <view class="field form-grid-side">
+        <text class="field-label">数量</text>
+        <input class="{{formErrors.quantity ? 'input-error' : ''}}" type="number" value="{{form.quantity}}" data-field="quantity" bindinput="onInput" />
+        <view class="field-error" wx:if="{{formErrors.quantity}}">{{formErrors.quantity}}</view>
+      </view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">限用日期（可选）</text>
+      <picker mode="date" value="{{form.expiryDate}}" bindchange="onExpiryPick">
+        <view class="picker-row {{formErrors.expiryDate ? 'input-error' : ''}}">
+          <text class="{{form.expiryDate ? '' : 'picker-placeholder'}}">{{form.expiryDate || '选择日期'}}</text>
+          <text class="chevron">选择 ›</text>
+        </view>
+      </picker>
+      <view class="field-error" wx:if="{{formErrors.expiryDate}}">{{formErrors.expiryDate}}</view>
+    </view>
+
+    <view class="sheet-actions">
+      <button class="secondary" bindtap="closeForm">取消</button>
+      <button class="primary" disabled="{{!canSubmit || submitting}}" bindtap="submitStock">{{submitting ? '保存中...' : '保存'}}</button>
+    </view>
+  </view>
+</view>
