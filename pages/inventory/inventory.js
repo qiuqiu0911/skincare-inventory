@@ -60,12 +60,30 @@ function filterStocksByCategory(stocks, categoryName) {
   return stocks.filter((stock) => stock.categoryNameSnapshot === categoryName);
 }
 
+function compareStockName(left, right) {
+  return String(left.productNameSnapshot || "").localeCompare(String(right.productNameSnapshot || ""));
+}
+
+function sortStocks(stocks, sortMode) {
+  return stocks.slice().sort((left, right) => {
+    if (sortMode === "expiry") {
+      const leftDate = left.expiryDateSnapshot || "9999-12-31";
+      const rightDate = right.expiryDateSnapshot || "9999-12-31";
+      if (leftDate !== rightDate) {
+        return leftDate.localeCompare(rightDate);
+      }
+    }
+    return compareStockName(left, right);
+  });
+}
+
 Page({
   data: {
     categories: [],
     categoryIndex: 0,
     filterTabs: [{ label: "全部", value: "", active: true }],
     filterCategoryName: "",
+    sortMode: "name",
     status: "stocked",
     statusOptions: STATUS_OPTIONS,
     statusTabs: STATUS_OPTIONS.map((item) => ({ ...item, count: 0 })),
@@ -138,8 +156,7 @@ Page({
         statusNote: meta.note,
         emptyTitle: meta.emptyTitle,
         emptyText: meta.emptyText,
-        stocks: allStocks
-          .filter((stock) => stock.status === nextStatus)
+        stocks: sortStocks(allStocks.filter((stock) => stock.status === nextStatus), this.data.sortMode)
           .map((stock) => ({
             ...stock,
             swiped: stock.id === this.data.swipedStockId,
@@ -170,6 +187,19 @@ Page({
       swipedStockId: ""
     });
     this.refresh(this.data.status);
+  },
+
+  toggleSortMode() {
+    const sortMode = this.data.sortMode === "name" ? "expiry" : "name";
+    this.setData({
+      sortMode,
+      swipedStockId: ""
+    });
+    this.refresh(this.data.status);
+    wx.showToast({
+      title: sortMode === "name" ? "按名称排序" : "按到期排序",
+      icon: "none"
+    });
   },
 
   onStockTouchStart(event) {

@@ -188,43 +188,9 @@
   background: #fff1f2;
 }
 
-.category-trash {
-  position: relative;
-  width: 30rpx;
-  height: 34rpx;
-}
-
-.category-trash-lid {
-  position: absolute;
-  left: 3rpx;
-  top: 3rpx;
-  width: 24rpx;
-  height: 5rpx;
-  border-radius: 999rpx;
-  background: #ef4444;
-}
-
-.category-trash-lid::before {
-  content: "";
-  position: absolute;
-  left: 8rpx;
-  top: -5rpx;
-  width: 8rpx;
-  height: 5rpx;
-  border-radius: 4rpx 4rpx 0 0;
-  background: #ef4444;
-}
-
-.category-trash-body {
-  position: absolute;
-  left: 5rpx;
-  top: 12rpx;
-  width: 20rpx;
-  height: 18rpx;
-  border: 4rpx solid #ef4444;
-  border-top: 0;
-  border-radius: 0 0 5rpx 5rpx;
-  box-sizing: border-box;
+.category-action-icon {
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .delete-button-disabled {

@@ -20,13 +20,10 @@
     <view class="record-swipe-item" wx:for="{{activeRecords}}" wx:key="id" data-id="{{item.id}}" bindtouchstart="onRecordTouchStart" bindtouchend="onRecordTouchEnd">
       <view class="record-swipe-actions {{item.swiped ? 'record-swipe-actions-active' : ''}}">
         <view class="record-swipe-button record-swipe-edit" aria-role="button" aria-label="编辑记录" data-id="{{item.id}}" catchtap="editRecord">
-          <text class="record-edit-icon">✎</text>
+          <image class="record-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" />
         </view>
         <view class="record-swipe-button record-swipe-delete" aria-role="button" aria-label="删除记录" data-id="{{item.id}}" catchtap="deleteRecord">
-          <view class="record-trash">
-            <view class="record-trash-lid"></view>
-            <view class="record-trash-body"></view>
-          </view>
+          <image class="record-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" />
         </view>
       </view>
       <view class="record-row {{item.swiped ? 'record-row-open' : ''}}" bindtap="closeRecordSwipe">

@@ -8,6 +8,9 @@ The PNG files below are generated from Lucide SVG icons:
 - review-recent.png / review-recent-active.png: RotateCcw
 - review-week.png / review-week-active.png: CalendarDays
 - category-tag.png: Tag
+- action-sort.png: ArrowDownWideNarrow-style composition
+- action-edit.png: Pencil
+- action-delete.png: Trash
 - stock-open.png: Bottle-style composition
 - stock-finish.png: Check
 

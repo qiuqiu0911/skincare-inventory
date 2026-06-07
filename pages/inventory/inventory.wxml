@@ -1,7 +1,12 @@
 <view class="page inventory-page">
   <view class="page-head">
     <view class="page-title">产品库存</view>
-    <view class="add-stock-fab" aria-role="button" aria-label="新增库存" hover-class="tap-hover" bindtap="openCreateForm">+</view>
+    <view class="page-actions">
+      <view class="sort-fab" aria-role="button" aria-label="切换库存排序" hover-class="tap-hover" bindtap="toggleSortMode">
+        <image class="sort-fab-icon" src="/assets/icons/action-sort.png" mode="aspectFit" />
+      </view>
+      <view class="add-stock-fab" aria-role="button" aria-label="新增库存" hover-class="tap-hover" bindtap="openCreateForm">+</view>
+    </view>
   </view>
 
   <view class="segmented inventory-tabs">
@@ -12,25 +17,24 @@
 
   <view class="inventory-status-note">{{statusNote}}</view>
 
-  <view class="category-filter-scroll">
-    <scroll-view scroll-x enable-flex class="category-filter-tabs">
-      <view wx:for="{{filterTabs}}" wx:key="value" class="category-tab {{item.active ? 'category-tab-active' : ''}}" data-category="{{item.value}}" bindtap="switchFilterCategory">
-        {{item.label}}
-      </view>
-    </scroll-view>
+  <view class="stock-tools">
+    <view class="category-filter-scroll">
+      <scroll-view scroll-x enable-flex class="category-filter-tabs">
+        <view wx:for="{{filterTabs}}" wx:key="value" class="category-tab {{item.active ? 'category-tab-active' : ''}}" data-category="{{item.value}}" bindtap="switchFilterCategory">
+          {{item.label}}
+        </view>
+      </scroll-view>
+    </view>
   </view>
 
   <view class="stock-list" wx:if="{{stocks.length}}">
     <view class="stock-swipe-item" wx:for="{{stocks}}" wx:key="id" data-id="{{item.id}}" data-status="{{item.status}}" bindtouchstart="onStockTouchStart" bindtouchend="onStockTouchEnd">
       <view class="stock-swipe-actions {{item.swiped ? 'stock-swipe-actions-active' : ''}}">
         <view class="swipe-icon-button swipe-edit" aria-role="button" aria-label="编辑库存" data-id="{{item.id}}" catchtap="swipeEditStock">
-          <text class="edit-icon">✎</text>
+          <image class="swipe-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" />
         </view>
         <view wx:if="{{item.status === 'stocked'}}" class="swipe-icon-button swipe-delete {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="删除库存" data-id="{{item.id}}" catchtap="swipeDeleteStock">
-          <view class="delete-trash">
-            <view class="trash-lid"></view>
-            <view class="trash-body"></view>
-          </view>
+          <image class="swipe-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" />
         </view>
       </view>
 

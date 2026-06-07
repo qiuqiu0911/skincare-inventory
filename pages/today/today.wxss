@@ -135,53 +135,13 @@
   box-shadow: 0 6rpx 16rpx rgba(17, 24, 39, 0.05);
 }
 
-.record-edit-icon {
-  font-size: 30rpx;
-  font-weight: 700;
-  line-height: 56rpx;
+.record-action-icon {
+  width: 30rpx;
+  height: 30rpx;
 }
 
 .record-swipe-delete {
   background: #fff1f2;
-}
-
-.record-trash {
-  position: relative;
-  width: 26rpx;
-  height: 30rpx;
-}
-
-.record-trash-lid {
-  position: absolute;
-  left: 2rpx;
-  top: 3rpx;
-  width: 22rpx;
-  height: 5rpx;
-  border-radius: 999rpx;
-  background: #ef4444;
-}
-
-.record-trash-lid::before {
-  content: "";
-  position: absolute;
-  left: 7rpx;
-  top: -5rpx;
-  width: 8rpx;
-  height: 5rpx;
-  border-radius: 4rpx 4rpx 0 0;
-  background: #ef4444;
-}
-
-.record-trash-body {
-  position: absolute;
-  left: 4rpx;
-  top: 12rpx;
-  width: 18rpx;
-  height: 16rpx;
-  border: 4rpx solid #ef4444;
-  border-top: 0;
-  border-radius: 0 0 5rpx 5rpx;
-  box-sizing: border-box;
 }
 
 .empty-record {

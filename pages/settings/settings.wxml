@@ -21,10 +21,7 @@
       <view class="category-swipe-item" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" bindtouchstart="onCategoryTouchStart" bindtouchend="onCategoryTouchEnd">
         <view class="category-swipe-actions {{item.swiped ? 'category-swipe-actions-active' : ''}}">
           <view class="category-delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" aria-role="button" aria-label="删除分类" data-id="{{item.id}}" data-name="{{item.name}}" catchtap="deleteCategory">
-            <view class="category-trash">
-              <view class="category-trash-lid"></view>
-              <view class="category-trash-body"></view>
-            </view>
+            <image class="category-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" />
           </view>
         </view>
         <view class="category-row card {{item.swiped ? 'category-row-open' : ''}}" bindtap="closeCategorySwipe">
