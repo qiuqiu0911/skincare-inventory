@@ -6,7 +6,7 @@
 
   <view class="segmented review-tabs">
     <view wx:for="{{tabs}}" wx:key="value" class="segmented-item {{activeTab === item.value ? 'segmented-item-active' : ''}}" data-value="{{item.value}}" bindtap="switchTab" hover-class="tap-hover">
-      <text class="tab-icon">{{item.icon}}</text>
+      <image class="tab-icon" src="{{activeTab === item.value ? item.activeIconPath : item.iconPath}}" mode="aspectFit" />
       <text>{{item.label}}</text>
     </view>
   </view>
@@ -14,12 +14,15 @@
   <view wx:if="{{activeTab === '3days'}}" class="recent-list">
     <view class="day-card card" wx:for="{{threeDays}}" wx:key="date">
       <view class="day-head">
-        <view class="day-title">{{item.label}}</view>
-        <view class="day-date">{{item.shortDate}}</view>
+        <view>
+          <view class="day-title">{{item.label}}</view>
+          <view class="day-date">{{item.shortDate}}</view>
+        </view>
+        <view class="makeup-button" data-date="{{item.date}}" bindtap="addRecordForDay">补记</view>
       </view>
       <view wx:if="{{item.count}}">
         <view class="slot-block" wx:if="{{item.morning.length}}">
-          <view class="slot-icon sun">☀</view>
+          <image class="slot-icon sun" src="/assets/icons/time-morning.png" mode="aspectFit" />
           <view class="slot-list">
             <view class="slot-row" wx:for="{{item.morning}}" wx:key="id">
               <text>{{item.productNameSnapshot}}</text>
@@ -28,7 +31,7 @@
           </view>
         </view>
         <view class="slot-block" wx:if="{{item.evening.length}}">
-          <view class="slot-icon moon">☾</view>
+          <image class="slot-icon moon" src="/assets/icons/time-evening.png" mode="aspectFit" />
           <view class="slot-list">
             <view class="slot-row" wx:for="{{item.evening}}" wx:key="id">
               <text>{{item.productNameSnapshot}}</text>

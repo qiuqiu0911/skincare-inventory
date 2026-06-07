@@ -517,6 +517,27 @@ function updateStockStatus(id, status, date = todayKey()) {
   if (!stock) {
     throw new Error("库存不存在");
   }
+  if (stock.status === "stocked" && status === "active" && stock.quantity > 1) {
+    const timestamp = nowIso();
+    const stockedStock = {
+      ...stock,
+      quantity: stock.quantity - 1,
+      updatedAt: timestamp
+    };
+    const activeStock = {
+      ...stock,
+      id: createId("stock"),
+      status: "active",
+      quantity: 1,
+      openedDate: dateKey,
+      updatedAt: timestamp
+    };
+    writeStoreAndScheduleCloudSync({
+      ...store,
+      stocks: store.stocks.flatMap((item) => (item.id === id ? [activeStock, stockedStock] : [item]))
+    });
+    return cloneItem(activeStock);
+  }
   const nextStock = nextStockForStatus(stock, status, dateKey);
   writeStoreAndScheduleCloudSync({
     ...store,

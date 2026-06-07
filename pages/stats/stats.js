@@ -2,8 +2,18 @@ const store = require("../../utils/store");
 const cloudConfig = require("../../utils/cloudConfig");
 
 const REVIEW_TABS = [
-  { label: "近 3 天", value: "3days", icon: "↺" },
-  { label: "本周", value: "week", icon: "□" }
+  {
+    label: "近 3 天",
+    value: "3days",
+    iconPath: "/assets/icons/review-recent.png",
+    activeIconPath: "/assets/icons/review-recent-active.png"
+  },
+  {
+    label: "本周",
+    value: "week",
+    iconPath: "/assets/icons/review-week.png",
+    activeIconPath: "/assets/icons/review-week-active.png"
+  }
 ];
 const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -125,6 +135,24 @@ Page({
 
   switchTab(event) {
     this.setData({ activeTab: event.currentTarget.dataset.value });
+  },
+
+  addRecordForDay(event) {
+    const date = event.currentTarget.dataset.date;
+    wx.switchTab({
+      url: "/pages/today/today",
+      success: () => {
+        const pages = getCurrentPages();
+        const todayPage = pages[pages.length - 1];
+        if (todayPage) {
+          if (typeof todayPage.openCreateForm === "function") {
+            todayPage.openCreateForm({ date });
+          } else {
+            todayPage.pendingRecordDate = date;
+          }
+        }
+      }
+    });
   },
 
   goToday() {

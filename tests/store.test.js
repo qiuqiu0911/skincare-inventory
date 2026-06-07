@@ -45,6 +45,28 @@ function testStockLifecycleAndDeleteBoundary() {
   assert.equal(store.listStocks("finished")[0].finishedDate, "2026-06-08");
 }
 
+function testOpenOneStockItemOnlySplitsQuantity() {
+  reset();
+  const stock = store.addStock({
+    name: "囤货精华",
+    categoryName: "精华",
+    capacity: "30ml",
+    quantity: 2
+  });
+
+  const activeStock = store.updateStockStatus(stock.id, "active", "2026-06-07");
+  const stockedItems = store.listStocks("stocked");
+  const activeItems = store.listStocks("active");
+  assert.notEqual(activeStock.id, stock.id);
+  assert.equal(activeStock.quantity, 1);
+  assert.equal(activeStock.openedDate, "2026-06-07");
+  assert.equal(stockedItems.length, 1);
+  assert.equal(stockedItems[0].id, stock.id);
+  assert.equal(stockedItems[0].quantity, 1);
+  assert.equal(activeItems.length, 1);
+  assert.equal(activeItems[0].id, activeStock.id);
+}
+
 function testDeleteStockedItem() {
   reset();
   const stock = store.addStock({
@@ -328,6 +350,7 @@ async function testRefreshFromCloudOverwritesLocalWhenNoPendingChange() {
 
 testUsageRecordCreatesProductAndCategory();
 testStockLifecycleAndDeleteBoundary();
+testOpenOneStockItemOnlySplitsQuantity();
 testDeleteStockedItem();
 testUpdateUsageRecordKeepsRecordIdentity();
 testUpdateStockKeepsLifecycleState();

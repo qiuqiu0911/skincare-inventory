@@ -12,15 +12,28 @@
     <view class="field-error form-error" wx:if="{{categoryError}}">{{categoryError}}</view>
   </view>
 
-  <view class="category-list card" wx:if="{{categories.length}}">
-    <view class="category-row" wx:for="{{categories}}" wx:key="id">
-      <view class="category-left">
-        <text class="tag-icon"></text>
-        <text class="category-name">{{item.name}}</text>
-      </view>
-      <view class="delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" aria-role="button" aria-label="删除分类" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="deleteCategory">
-        <view class="delete-line delete-line-a"></view>
-        <view class="delete-line delete-line-b"></view>
+  <view class="category-section" wx:if="{{categories.length}}">
+    <view class="section-line">
+      <view class="section-name">现有分类</view>
+      <view class="section-count">{{categories.length}} 个</view>
+    </view>
+    <view class="category-list">
+      <view class="category-swipe-item" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" bindtouchstart="onCategoryTouchStart" bindtouchend="onCategoryTouchEnd">
+        <view class="category-swipe-actions {{item.swiped ? 'category-swipe-actions-active' : ''}}">
+          <view class="category-delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" aria-role="button" aria-label="删除分类" data-id="{{item.id}}" data-name="{{item.name}}" catchtap="deleteCategory">
+            <view class="category-trash">
+              <view class="category-trash-lid"></view>
+              <view class="category-trash-body"></view>
+            </view>
+          </view>
+        </view>
+        <view class="category-row card {{item.swiped ? 'category-row-open' : ''}}" bindtap="closeCategorySwipe">
+          <view class="category-left">
+            <image class="tag-icon" src="/assets/icons/category-tag.png" mode="aspectFit" />
+            <text class="category-name">{{item.name}}</text>
+          </view>
+          <view class="category-hint">左滑管理</view>
+        </view>
       </view>
     </view>
   </view>

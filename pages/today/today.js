@@ -2,8 +2,8 @@ const store = require("../../utils/store");
 const cloudConfig = require("../../utils/cloudConfig");
 
 const TIME_OPTIONS = [
-  { label: "早间", fullLabel: "早间护肤", value: "morning", icon: "☀" },
-  { label: "晚间", fullLabel: "晚间护肤", value: "evening", icon: "☾" }
+  { label: "早间", fullLabel: "早间护肤", value: "morning" },
+  { label: "晚间", fullLabel: "晚间护肤", value: "evening" }
 ];
 const MAX_AMOUNT_LENGTH = 30;
 
@@ -16,7 +16,8 @@ function emptyForm(timeOfDay) {
     productName: "",
     categoryName: "洁面",
     amount: "",
-    timeOfDay
+    timeOfDay,
+    date: store.todayKey()
   };
 }
 
@@ -53,6 +54,7 @@ Page({
     activeTime: "morning",
     categoryIndex: 0,
     submitting: false,
+    swipedRecordId: "",
     showForm: false,
     editingId: "",
     formErrors: {},
@@ -60,8 +62,18 @@ Page({
     form: emptyForm("morning")
   },
 
+  onLoad(options = {}) {
+    if (options.date) {
+      this.pendingRecordDate = options.date;
+    }
+  },
+
   onShow() {
     this.refresh();
+    if (this.pendingRecordDate) {
+      this.openCreateForm({ date: this.pendingRecordDate });
+      this.pendingRecordDate = "";
+    }
     this.syncFromCloud();
   },
 
@@ -102,7 +114,12 @@ Page({
         categories,
         productOptions: store.productOptions(),
         records,
-        activeRecords: records.filter((record) => record.timeOfDay === this.data.activeTime),
+        activeRecords: records
+          .filter((record) => record.timeOfDay === this.data.activeTime)
+          .map((record) => ({
+            ...record,
+            swiped: record.id === this.data.swipedRecordId
+          })),
         categoryIndex: Math.max(0, categories.indexOf(categoryName)),
         form,
         canSubmit: canSubmitRecord(form, this.data.submitting)
@@ -117,8 +134,54 @@ Page({
     const activeTime = event.currentTarget.dataset.value;
     this.setData({
       activeTime,
-      activeRecords: this.data.records.filter((record) => record.timeOfDay === activeTime)
+      swipedRecordId: "",
+      activeRecords: this.data.records
+        .filter((record) => record.timeOfDay === activeTime)
+        .map((record) => ({ ...record, swiped: false }))
     });
+  },
+
+  onRecordTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) {
+      return;
+    }
+    this.recordTouchStartX = touch.clientX;
+    this.recordTouchStartY = touch.clientY;
+  },
+
+  onRecordTouchEnd(event) {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch || this.recordTouchStartX === undefined) {
+      return;
+    }
+    const deltaX = touch.clientX - this.recordTouchStartX;
+    const deltaY = touch.clientY - this.recordTouchStartY;
+    const id = event.currentTarget.dataset.id;
+
+    this.recordTouchStartX = undefined;
+    this.recordTouchStartY = undefined;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+    if (deltaX < -45) {
+      this.setData({ swipedRecordId: id });
+      this.refresh();
+      return;
+    }
+    if (deltaX > 30 || this.data.swipedRecordId) {
+      this.setData({ swipedRecordId: "" });
+      this.refresh();
+    }
+  },
+
+  closeRecordSwipe() {
+    if (!this.data.swipedRecordId) {
+      return;
+    }
+    this.setData({ swipedRecordId: "" });
+    this.refresh();
   },
 
   switchFormTime(event) {
@@ -126,8 +189,9 @@ Page({
     this.setForm({ ...this.data.form, timeOfDay });
   },
 
-  openCreateForm() {
+  openCreateForm(options = {}) {
     const categoryName = this.data.categories[0] || "未分类";
+    const date = options.date || (options.currentTarget && options.currentTarget.dataset.date) || store.todayKey();
     this.setData({
       showForm: true,
       editingId: "",
@@ -135,7 +199,8 @@ Page({
     });
     this.setForm({
       ...emptyForm(this.data.activeTime),
-      categoryName
+      categoryName,
+      date
     });
   },
 
@@ -149,6 +214,7 @@ Page({
   },
 
   editRecord(event) {
+    this.closeRecordSwipe();
     const id = event.currentTarget.dataset.id;
     const record = this.data.records.find((item) => item.id === id);
     if (!record) {
@@ -163,7 +229,8 @@ Page({
       productName: record.productNameSnapshot,
       categoryName: record.categoryNameSnapshot,
       amount: record.amount,
-      timeOfDay: record.timeOfDay
+      timeOfDay: record.timeOfDay,
+      date: record.date
     });
   },
 
@@ -200,6 +267,13 @@ Page({
     });
   },
 
+  onDatePick(event) {
+    this.setForm({
+      ...this.data.form,
+      date: event.detail.value
+    });
+  },
+
   submitRecord() {
     if (this.data.submitting) {
       return;
@@ -218,7 +292,7 @@ Page({
         categoryName: this.data.form.categoryName,
         amount: this.data.form.amount,
         timeOfDay: this.data.form.timeOfDay,
-        date: store.todayKey()
+        date: this.data.form.date || store.todayKey()
       };
       if (this.data.editingId) {
         store.updateUsageRecord(this.data.editingId, payload);
@@ -256,6 +330,7 @@ Page({
         }
         try {
           store.deleteUsageRecord(id);
+          this.setData({ swipedRecordId: "" });
           this.refresh();
           wx.showToast({ title: "已删除", icon: "success" });
         } catch (error) {

@@ -32,6 +32,7 @@ Page({
     categoryError: "",
     submitting: false,
     deletingCategoryId: "",
+    swipedCategoryId: "",
     canSubmit: false
   },
 
@@ -56,11 +57,59 @@ Page({
 
   refresh() {
     try {
-      this.setData({ categories: store.listCategories() });
+      this.setData({
+        categories: store.listCategories().map((category) => ({
+          ...category,
+          swiped: category.id === this.data.swipedCategoryId
+        }))
+      });
     } catch (error) {
       this.setData({ categories: [] });
       wx.showToast({ title: error.message, icon: "none" });
     }
+  },
+
+  onCategoryTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) {
+      return;
+    }
+    this.categoryTouchStartX = touch.clientX;
+    this.categoryTouchStartY = touch.clientY;
+  },
+
+  onCategoryTouchEnd(event) {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch || this.categoryTouchStartX === undefined) {
+      return;
+    }
+    const deltaX = touch.clientX - this.categoryTouchStartX;
+    const deltaY = touch.clientY - this.categoryTouchStartY;
+    const id = event.currentTarget.dataset.id;
+
+    this.categoryTouchStartX = undefined;
+    this.categoryTouchStartY = undefined;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+    if (deltaX < -45) {
+      this.setData({ swipedCategoryId: id });
+      this.refresh();
+      return;
+    }
+    if (deltaX > 30 || this.data.swipedCategoryId) {
+      this.setData({ swipedCategoryId: "" });
+      this.refresh();
+    }
+  },
+
+  closeCategorySwipe() {
+    if (!this.data.swipedCategoryId) {
+      return;
+    }
+    this.setData({ swipedCategoryId: "" });
+    this.refresh();
   },
 
   onCategoryInput(event) {
@@ -120,6 +169,7 @@ Page({
         this.setData({ deletingCategoryId: id });
         try {
           store.deleteCategory(id);
+          this.setData({ swipedCategoryId: "" });
           this.refresh();
           wx.showToast({ title: "已删除分类", icon: "success" });
         } catch (error) {

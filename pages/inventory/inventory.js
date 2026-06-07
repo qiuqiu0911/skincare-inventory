@@ -53,10 +53,19 @@ function canSubmitStock(form, submitting) {
   return !submitting && !hasErrors(validateStockForm(form));
 }
 
+function filterStocksByCategory(stocks, categoryName) {
+  if (!categoryName) {
+    return stocks;
+  }
+  return stocks.filter((stock) => stock.categoryNameSnapshot === categoryName);
+}
+
 Page({
   data: {
     categories: [],
     categoryIndex: 0,
+    filterTabs: [{ label: "全部", value: "", active: true }],
+    filterCategoryName: "",
     status: "active",
     statusOptions: STATUS_OPTIONS,
     statusTabs: STATUS_OPTIONS.map((item) => ({ ...item, count: 0 })),
@@ -67,6 +76,7 @@ Page({
     stocks: [],
     submitting: false,
     updatingStockId: "",
+    swipedStockId: "",
     showForm: false,
     editingStockId: "",
     formErrors: {},
@@ -106,20 +116,37 @@ Page({
     try {
       const categories = store.listCategories().map((item) => item.name);
       const categoryName = this.data.form.categoryName || categories[0] || "未分类";
+      const currentFilterName = this.data.filterCategoryName;
+      const filterCategoryName = categories.includes(currentFilterName) ? currentFilterName : "";
+      const filterTabs = [
+        { label: "全部", value: "", active: !filterCategoryName },
+        ...categories.map((name) => ({ label: name, value: name, active: filterCategoryName === name }))
+      ];
+      const allStocks = filterStocksByCategory(store.listStocks(), filterCategoryName);
       const meta = statusMeta(nextStatus);
       const stockCounts = {
-        stocked: store.listStocks("stocked").length,
-        active: store.listStocks("active").length,
-        finished: store.listStocks("finished").length
+        stocked: allStocks.filter((stock) => stock.status === "stocked").length,
+        active: allStocks.filter((stock) => stock.status === "active").length,
+        finished: allStocks.filter((stock) => stock.status === "finished").length
       };
       this.setData({
         categories,
+        filterTabs,
+        filterCategoryName,
         categoryIndex: Math.max(0, categories.indexOf(categoryName)),
         status: nextStatus,
         statusNote: meta.note,
         emptyTitle: meta.emptyTitle,
         emptyText: meta.emptyText,
-        stocks: store.listStocks(nextStatus),
+        stocks: allStocks
+          .filter((stock) => stock.status === nextStatus)
+          .map((stock) => ({
+            ...stock,
+            swiped: stock.id === this.data.swipedStockId,
+            swipeClass: stock.id === this.data.swipedStockId
+              ? (stock.status === "stocked" ? "stock-card-front-open-delete" : "stock-card-front-open-edit")
+              : ""
+          })),
         stockCounts,
         statusTabs: STATUS_OPTIONS.map((item) => ({ ...item, count: stockCounts[item.value] || 0 })),
         form: { ...this.data.form, categoryName },
@@ -132,7 +159,61 @@ Page({
   },
 
   switchStatus(event) {
+    this.setData({ swipedStockId: "" });
     this.refresh(event.currentTarget.dataset.status);
+  },
+
+  switchFilterCategory(event) {
+    const filterCategoryName = event.currentTarget.dataset.category || "";
+    this.setData({
+      filterCategoryName,
+      swipedStockId: ""
+    });
+    this.refresh(this.data.status);
+  },
+
+  onStockTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) {
+      return;
+    }
+    this.touchStartX = touch.clientX;
+    this.touchStartY = touch.clientY;
+  },
+
+  onStockTouchEnd(event) {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch || this.touchStartX === undefined) {
+      return;
+    }
+    const deltaX = touch.clientX - this.touchStartX;
+    const deltaY = touch.clientY - this.touchStartY;
+    const id = event.currentTarget.dataset.id;
+    const status = event.currentTarget.dataset.status;
+
+    this.touchStartX = undefined;
+    this.touchStartY = undefined;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+    if (deltaX < -45) {
+      this.setData({ swipedStockId: id });
+      this.refresh(this.data.status);
+      return;
+    }
+    if (deltaX > 30 || this.data.swipedStockId) {
+      this.setData({ swipedStockId: "" });
+      this.refresh(this.data.status);
+    }
+  },
+
+  closeSwipe() {
+    if (!this.data.swipedStockId) {
+      return;
+    }
+    this.setData({ swipedStockId: "" });
+    this.refresh(this.data.status);
   },
 
   openCreateForm() {
@@ -145,6 +226,7 @@ Page({
   },
 
   editStock(event) {
+    this.closeSwipe();
     const id = event.currentTarget.dataset.id;
     const stock = store.listStocks().find((item) => item.id === id);
     if (!stock) {
@@ -162,6 +244,14 @@ Page({
       quantity: stock.quantity,
       expiryDate: stock.expiryDateSnapshot
     });
+  },
+
+  swipeEditStock(event) {
+    this.editStock(event);
+  },
+
+  swipeDeleteStock(event) {
+    this.deleteStock(event);
   },
 
   closeForm() {
@@ -261,6 +351,7 @@ Page({
           } else {
             store.deleteStock(id);
           }
+          this.setData({ swipedStockId: "" });
           this.refresh(this.data.status);
           wx.showToast({ title: successTitle, icon: "success" });
         } catch (error) {
@@ -273,6 +364,9 @@ Page({
   },
 
   openStock(event) {
+    if (this.data.updatingStockId) {
+      return;
+    }
     this.confirmStockAction({
       id: event.currentTarget.dataset.id,
       title: "确认开瓶？",
@@ -284,6 +378,9 @@ Page({
   },
 
   finishStock(event) {
+    if (this.data.updatingStockId) {
+      return;
+    }
     this.confirmStockAction({
       id: event.currentTarget.dataset.id,
       title: "标记为已用完？",
@@ -295,6 +392,9 @@ Page({
   },
 
   deleteStock(event) {
+    if (this.data.updatingStockId) {
+      return;
+    }
     this.confirmStockAction({
       id: event.currentTarget.dataset.id,
       title: "删除这件囤货？",

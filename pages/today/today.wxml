@@ -8,7 +8,7 @@
 
   <view class="segmented time-tabs">
     <view wx:for="{{timeOptions}}" wx:key="value" class="segmented-item {{activeTime === item.value ? 'segmented-item-active' : ''}}" data-value="{{item.value}}" bindtap="switchTime" hover-class="tap-hover">
-      <text class="time-icon {{item.value === 'morning' ? 'time-icon-sun' : 'time-icon-moon'}}">{{item.icon}}</text>
+      <image class="time-icon" src="{{item.value === 'morning' ? '/assets/icons/time-morning.png' : '/assets/icons/time-evening.png'}}" mode="aspectFit" />
       <text>{{item.fullLabel}}</text>
     </view>
   </view>
@@ -17,12 +17,23 @@
     <view class="record-card-head">
       <text class="record-count">已记录 {{activeRecords.length}} 项</text>
     </view>
-    <view class="record-row" wx:for="{{activeRecords}}" wx:key="id">
-      <view class="record-name">{{item.productNameSnapshot}}</view>
-      <view class="record-side">
-        <text class="record-amount">{{item.amount || '适量'}}</text>
-        <view class="icon-button" aria-role="button" aria-label="编辑记录" data-id="{{item.id}}" bindtap="editRecord">↗</view>
-        <view class="icon-button danger-icon" aria-role="button" aria-label="删除记录" data-id="{{item.id}}" bindtap="deleteRecord">×</view>
+    <view class="record-swipe-item" wx:for="{{activeRecords}}" wx:key="id" data-id="{{item.id}}" bindtouchstart="onRecordTouchStart" bindtouchend="onRecordTouchEnd">
+      <view class="record-swipe-actions {{item.swiped ? 'record-swipe-actions-active' : ''}}">
+        <view class="record-swipe-button record-swipe-edit" aria-role="button" aria-label="编辑记录" data-id="{{item.id}}" catchtap="editRecord">
+          <text class="record-edit-icon">✎</text>
+        </view>
+        <view class="record-swipe-button record-swipe-delete" aria-role="button" aria-label="删除记录" data-id="{{item.id}}" catchtap="deleteRecord">
+          <view class="record-trash">
+            <view class="record-trash-lid"></view>
+            <view class="record-trash-body"></view>
+          </view>
+        </view>
+      </view>
+      <view class="record-row {{item.swiped ? 'record-row-open' : ''}}" bindtap="closeRecordSwipe">
+        <view class="record-name">{{item.productNameSnapshot}}</view>
+        <view class="record-side">
+          <text class="record-amount">{{item.amount || '适量'}}</text>
+        </view>
       </view>
     </view>
   </view>
@@ -48,9 +59,19 @@
 
     <view class="segmented sheet-time-tabs">
       <view wx:for="{{timeOptions}}" wx:key="value" class="segmented-item {{form.timeOfDay === item.value ? 'segmented-item-active' : ''}}" data-value="{{item.value}}" bindtap="switchFormTime" hover-class="tap-hover">
-        <text class="time-icon {{item.value === 'morning' ? 'time-icon-sun' : 'time-icon-moon'}}">{{item.icon}}</text>
+        <image class="time-icon" src="{{item.value === 'morning' ? '/assets/icons/time-morning.png' : '/assets/icons/time-evening.png'}}" mode="aspectFit" />
         <text>{{item.label}}</text>
       </view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">日期</text>
+      <picker mode="date" value="{{form.date}}" bindchange="onDatePick">
+        <view class="picker-row">
+          <text>{{form.date}}</text>
+          <text class="chevron">选择 ›</text>
+        </view>
+      </picker>
     </view>
 
     <view class="field">

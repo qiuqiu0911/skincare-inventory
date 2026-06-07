@@ -26,15 +26,10 @@
 }
 
 .time-icon {
+  width: 30rpx;
+  height: 30rpx;
   margin-right: 10rpx;
-}
-
-.time-icon-sun {
-  color: #f59e0b;
-}
-
-.time-icon-moon {
-  color: #818cf8;
+  flex-shrink: 0;
 }
 
 .record-card {
@@ -55,17 +50,51 @@
   letter-spacing: 2rpx;
 }
 
+.record-swipe-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.record-swipe-item:first-of-type .record-row {
+  border-top: 0;
+}
+
+.record-swipe-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10rpx;
+  width: 146rpx;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.record-swipe-actions-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .record-row {
+  position: relative;
+  z-index: 1;
   min-height: 72rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18rpx;
+  background: #f9fafb;
   border-top: 1rpx solid rgba(17, 24, 39, 0.05);
+  transition: transform 0.18s ease;
 }
 
-.record-row:first-of-type {
-  border-top: 0;
+.record-row-open {
+  transform: translateX(-146rpx);
 }
 
 .record-name {
@@ -91,22 +120,68 @@
   word-break: break-all;
 }
 
-.icon-button {
-  min-width: 44rpx;
-  min-height: 44rpx;
-  padding: 0;
+.record-swipe-button {
+  width: 56rpx;
+  height: 56rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 999rpx;
-  background: transparent;
-  color: #9ca3af;
-  font-size: 24rpx;
-  line-height: 44rpx;
 }
 
-.danger-icon {
-  color: #ef4444;
+.record-swipe-edit {
+  background: #ffffff;
+  color: #9ca3af;
+  box-shadow: 0 6rpx 16rpx rgba(17, 24, 39, 0.05);
+}
+
+.record-edit-icon {
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 56rpx;
+}
+
+.record-swipe-delete {
+  background: #fff1f2;
+}
+
+.record-trash {
+  position: relative;
+  width: 26rpx;
+  height: 30rpx;
+}
+
+.record-trash-lid {
+  position: absolute;
+  left: 2rpx;
+  top: 3rpx;
+  width: 22rpx;
+  height: 5rpx;
+  border-radius: 999rpx;
+  background: #ef4444;
+}
+
+.record-trash-lid::before {
+  content: "";
+  position: absolute;
+  left: 7rpx;
+  top: -5rpx;
+  width: 8rpx;
+  height: 5rpx;
+  border-radius: 4rpx 4rpx 0 0;
+  background: #ef4444;
+}
+
+.record-trash-body {
+  position: absolute;
+  left: 4rpx;
+  top: 12rpx;
+  width: 18rpx;
+  height: 16rpx;
+  border: 4rpx solid #ef4444;
+  border-top: 0;
+  border-radius: 0 0 5rpx 5rpx;
+  box-sizing: border-box;
 }
 
 .empty-record {

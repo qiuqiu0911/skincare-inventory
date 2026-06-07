@@ -11,30 +11,46 @@
 
   <view class="inventory-status-note">{{statusNote}}</view>
 
+  <view class="category-filter-scroll">
+    <scroll-view scroll-x enable-flex class="category-filter-tabs">
+      <view wx:for="{{filterTabs}}" wx:key="value" class="category-tab {{item.active ? 'category-tab-active' : ''}}" data-category="{{item.value}}" bindtap="switchFilterCategory">
+        {{item.label}}
+      </view>
+    </scroll-view>
+  </view>
+
   <view class="stock-list" wx:if="{{stocks.length}}">
-    <view class="stock-card card" wx:for="{{stocks}}" wx:key="id">
-      <view class="stock-head">
-        <view class="stock-main">
-          <view class="stock-name">{{item.productNameSnapshot}}</view>
-          <view class="stock-meta">分类: {{item.categoryNameSnapshot}} | {{item.capacitySnapshot || '不详'}} · {{item.quantity}} 件</view>
+    <view class="stock-swipe-item" wx:for="{{stocks}}" wx:key="id" data-id="{{item.id}}" data-status="{{item.status}}" bindtouchstart="onStockTouchStart" bindtouchend="onStockTouchEnd">
+      <view class="stock-swipe-actions {{item.swiped ? 'stock-swipe-actions-active' : ''}}">
+        <view class="swipe-icon-button swipe-edit" aria-role="button" aria-label="编辑库存" data-id="{{item.id}}" catchtap="swipeEditStock">
+          <text class="edit-icon">✎</text>
         </view>
-        <view class="stock-right">
-          <view class="icon-button" aria-role="button" aria-label="编辑库存" data-id="{{item.id}}" bindtap="editStock">↗</view>
-          <text class="stock-pill {{item.status === 'active' ? 'stock-pill-active' : item.status === 'finished' ? 'stock-pill-finished' : ''}}">
-            {{item.status === 'stocked' ? '囤货' : item.status === 'active' ? '使用中' : '已用完'}}
-          </text>
+        <view wx:if="{{item.status === 'stocked'}}" class="swipe-icon-button swipe-delete {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="删除库存" data-id="{{item.id}}" catchtap="swipeDeleteStock">
+          <view class="delete-trash">
+            <view class="trash-lid"></view>
+            <view class="trash-body"></view>
+          </view>
         </view>
       </view>
-      <view class="stock-foot">
-        <view class="stock-dates">
-          <text wx:if="{{item.expiryDateSnapshot && item.status === 'stocked'}}">到期: {{item.expiryDateSnapshot}}</text>
-          <text wx:if="{{item.openedDate && item.status === 'active'}}">开瓶: {{item.openedDate}}</text>
-          <text wx:if="{{item.finishedDate && item.status === 'finished'}}">空瓶: {{item.finishedDate}}</text>
+
+      <view class="stock-card card stock-card-front {{item.swipeClass}}" bindtap="closeSwipe">
+        <view class="stock-head">
+          <view class="stock-main">
+            <view class="stock-name">{{item.productNameSnapshot}}</view>
+            <view class="stock-meta">分类: {{item.categoryNameSnapshot}} | {{item.capacitySnapshot || '不详'}} · {{item.quantity}} 件</view>
+          </view>
         </view>
-        <view class="stock-actions">
-          <button wx:if="{{item.status === 'stocked'}}" class="primary mini-button" size="mini" disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" bindtap="openStock">记录开瓶</button>
-          <button wx:if="{{item.status === 'stocked'}}" class="danger mini-button" size="mini" disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" bindtap="deleteStock">删除</button>
-          <button wx:if="{{item.status === 'active'}}" class="primary mini-button" size="mini" disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" bindtap="finishStock">标记用完</button>
+        <view class="stock-bottom-row" wx:if="{{item.expiryDateSnapshot || item.openedDate || item.finishedDate || item.status === 'stocked' || item.status === 'active'}}">
+          <view class="stock-dates" wx:if="{{item.expiryDateSnapshot || item.openedDate || item.finishedDate}}">
+            <text wx:if="{{item.expiryDateSnapshot && item.status === 'stocked'}}">到期: {{item.expiryDateSnapshot}}</text>
+            <text wx:if="{{item.openedDate && item.status === 'active'}}">开瓶: {{item.openedDate}}</text>
+            <text wx:if="{{item.finishedDate && item.status === 'finished'}}">空瓶: {{item.finishedDate}}</text>
+          </view>
+          <view class="stock-dates stock-dates-placeholder" wx:else></view>
+          <view class="stock-actions" wx:if="{{item.status === 'stocked' || item.status === 'active'}}">
+            <view wx:if="{{item.status === 'stocked'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" data-id="{{item.id}}" catchtap="openStock">记录开瓶</view>
+            <view wx:if="{{item.status === 'active'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" data-id="{{item.id}}" catchtap="finishStock">标记用完</view>
+          </view>
         </view>
       </view>
     </view>
@@ -42,7 +58,7 @@
 
   <view class="empty-record" wx:else>
     <view class="empty-title">{{emptyTitle}}</view>
-    <view class="empty-text">{{emptyText}}</view>
+    <view class="empty-text">{{filterCategoryName ? '当前分类下暂无该状态库存。' : emptyText}}</view>
   </view>
 
   <view class="bottom-action">
