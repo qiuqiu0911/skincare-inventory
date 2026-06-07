@@ -2,8 +2,8 @@ const store = require("../../utils/store");
 const cloudConfig = require("../../utils/cloudConfig");
 
 const STATUS_OPTIONS = [
-  { label: "使用中", value: "active", note: "已开瓶，可标记用完", emptyTitle: "还没有使用中的产品", emptyText: "从囤货列表中开瓶后，会显示在这里。" },
   { label: "囤货", value: "stocked", note: "未开瓶，可开瓶或删除", emptyTitle: "还没有囤货", emptyText: "新增库存后，可以在这里记录开瓶。" },
+  { label: "使用中", value: "active", note: "已开瓶，可标记用完", emptyTitle: "还没有使用中的产品", emptyText: "从囤货列表中开瓶后，会显示在这里。" },
   { label: "已用完", value: "finished", note: "历史归档，仅查看", emptyTitle: "还没有用完记录", emptyText: "标记用完后会自动归档，方便回顾空瓶节奏。" }
 ];
 const MAX_TEXT_LENGTH = 30;
@@ -66,12 +66,12 @@ Page({
     categoryIndex: 0,
     filterTabs: [{ label: "全部", value: "", active: true }],
     filterCategoryName: "",
-    status: "active",
+    status: "stocked",
     statusOptions: STATUS_OPTIONS,
     statusTabs: STATUS_OPTIONS.map((item) => ({ ...item, count: 0 })),
-    statusNote: STATUS_OPTIONS[0].note,
-    emptyTitle: STATUS_OPTIONS[0].emptyTitle,
-    emptyText: STATUS_OPTIONS[0].emptyText,
+    statusNote: statusMeta("stocked").note,
+    emptyTitle: statusMeta("stocked").emptyTitle,
+    emptyText: statusMeta("stocked").emptyText,
     stockCounts: { stocked: 0, active: 0, finished: 0 },
     stocks: [],
     submitting: false,

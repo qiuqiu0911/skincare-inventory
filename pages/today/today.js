@@ -6,6 +6,7 @@ const TIME_OPTIONS = [
   { label: "晚间", fullLabel: "晚间护肤", value: "evening" }
 ];
 const MAX_AMOUNT_LENGTH = 30;
+const DEFAULT_TIME_OF_DAY = defaultTimeOfDay();
 
 function trim(value) {
   return String(value || "").trim();
@@ -19,6 +20,10 @@ function emptyForm(timeOfDay) {
     timeOfDay,
     date: store.todayKey()
   };
+}
+
+function defaultTimeOfDay(date = new Date()) {
+  return date.getHours() < 12 ? "morning" : "evening";
 }
 
 function validateRecordForm(form) {
@@ -51,7 +56,7 @@ Page({
     records: [],
     activeRecords: [],
     timeOptions: TIME_OPTIONS,
-    activeTime: "morning",
+    activeTime: DEFAULT_TIME_OF_DAY,
     categoryIndex: 0,
     submitting: false,
     swipedRecordId: "",
@@ -59,7 +64,7 @@ Page({
     editingId: "",
     formErrors: {},
     canSubmit: false,
-    form: emptyForm("morning")
+    form: emptyForm(DEFAULT_TIME_OF_DAY)
   },
 
   onLoad(options = {}) {
@@ -69,6 +74,19 @@ Page({
   },
 
   onShow() {
+    if (!this.hasManualTimeSelection && !this.data.showForm) {
+      const activeTime = defaultTimeOfDay();
+      if (activeTime !== this.data.activeTime) {
+        this.setData({
+          activeTime,
+          swipedRecordId: "",
+          form: {
+            ...this.data.form,
+            timeOfDay: activeTime
+          }
+        });
+      }
+    }
     this.refresh();
     if (this.pendingRecordDate) {
       this.openCreateForm({ date: this.pendingRecordDate });
@@ -132,6 +150,7 @@ Page({
 
   switchTime(event) {
     const activeTime = event.currentTarget.dataset.value;
+    this.hasManualTimeSelection = true;
     this.setData({
       activeTime,
       swipedRecordId: "",
@@ -186,6 +205,7 @@ Page({
 
   switchFormTime(event) {
     const timeOfDay = event.currentTarget.dataset.value;
+    this.hasManualTimeSelection = true;
     this.setForm({ ...this.data.form, timeOfDay });
   },
 

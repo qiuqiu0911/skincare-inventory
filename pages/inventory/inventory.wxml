@@ -1,6 +1,7 @@
 <view class="page inventory-page">
   <view class="page-head">
     <view class="page-title">产品库存</view>
+    <view class="add-stock-fab" aria-role="button" aria-label="新增库存" hover-class="tap-hover" bindtap="openCreateForm">+</view>
   </view>
 
   <view class="segmented inventory-tabs">
@@ -34,22 +35,23 @@
       </view>
 
       <view class="stock-card card stock-card-front {{item.swipeClass}}" bindtap="closeSwipe">
-        <view class="stock-head">
+        <view class="stock-content">
           <view class="stock-main">
             <view class="stock-name">{{item.productNameSnapshot}}</view>
-            <view class="stock-meta">分类: {{item.categoryNameSnapshot}} | {{item.capacitySnapshot || '不详'}} · {{item.quantity}} 件</view>
+            <view class="stock-meta">
+              <text>分类: {{item.categoryNameSnapshot}} | {{item.capacitySnapshot || '不详'}} · {{item.quantity}} 件</text>
+              <text wx:if="{{item.expiryDateSnapshot && item.status === 'stocked'}}"> · 到期: {{item.expiryDateSnapshot}}</text>
+              <text wx:if="{{item.openedDate && item.status === 'active'}}"> · 开瓶: {{item.openedDate}}</text>
+              <text wx:if="{{item.finishedDate && item.status === 'finished'}}"> · 空瓶: {{item.finishedDate}}</text>
+            </view>
           </view>
-        </view>
-        <view class="stock-bottom-row" wx:if="{{item.expiryDateSnapshot || item.openedDate || item.finishedDate || item.status === 'stocked' || item.status === 'active'}}">
-          <view class="stock-dates" wx:if="{{item.expiryDateSnapshot || item.openedDate || item.finishedDate}}">
-            <text wx:if="{{item.expiryDateSnapshot && item.status === 'stocked'}}">到期: {{item.expiryDateSnapshot}}</text>
-            <text wx:if="{{item.openedDate && item.status === 'active'}}">开瓶: {{item.openedDate}}</text>
-            <text wx:if="{{item.finishedDate && item.status === 'finished'}}">空瓶: {{item.finishedDate}}</text>
-          </view>
-          <view class="stock-dates stock-dates-placeholder" wx:else></view>
           <view class="stock-actions" wx:if="{{item.status === 'stocked' || item.status === 'active'}}">
-            <view wx:if="{{item.status === 'stocked'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" data-id="{{item.id}}" catchtap="openStock">记录开瓶</view>
-            <view wx:if="{{item.status === 'active'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" data-id="{{item.id}}" catchtap="finishStock">标记用完</view>
+            <view wx:if="{{item.status === 'stocked'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="记录开瓶" data-id="{{item.id}}" catchtap="openStock">
+              <image class="stock-action-icon" src="/assets/icons/stock-open.png" mode="aspectFit" />
+            </view>
+            <view wx:if="{{item.status === 'active'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="标记用完" data-id="{{item.id}}" catchtap="finishStock">
+              <image class="stock-action-icon" src="/assets/icons/stock-finish.png" mode="aspectFit" />
+            </view>
           </view>
         </view>
       </view>
@@ -59,10 +61,6 @@
   <view class="empty-record" wx:else>
     <view class="empty-title">{{emptyTitle}}</view>
     <view class="empty-text">{{filterCategoryName ? '当前分类下暂无该状态库存。' : emptyText}}</view>
-  </view>
-
-  <view class="bottom-action">
-    <button class="primary add-stock-button" hover-class="button-hover" bindtap="openCreateForm">＋ 新增库存</button>
   </view>
 
   <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>

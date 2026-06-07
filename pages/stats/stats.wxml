@@ -44,11 +44,15 @@
     </view>
   </view>
 
-  <view wx:if="{{activeTab === 'week'}}">
+  <view wx:if="{{activeTab === 'week'}}" class="week-panel" bindtouchstart="onWeekTouchStart" bindtouchend="onWeekTouchEnd">
     <view class="week-card card" wx:if="{{week.rows.length}}">
       <view class="week-head">
         <view class="week-title">本周使用概览</view>
         <view class="week-range">{{week.start}} - {{week.end}}</view>
+      </view>
+      <view class="week-legend">
+        <view class="legend-item"><text class="legend-half legend-morning"></text><text>左早</text></view>
+        <view class="legend-item"><text class="legend-half legend-evening"></text><text>右晚</text></view>
       </view>
       <view class="week-grid-head">
         <view class="product-col">产品名称</view>
@@ -60,7 +64,10 @@
         <view class="product-col product-name">{{item.productName}}</view>
         <view class="day-cols">
           <view wx:for="{{item.cells}}" wx:key="date" class="day-col">
-            <view class="usage-dot {{item.used ? 'usage-dot-on' : ''}}"></view>
+            <view class="usage-circle">
+              <view class="usage-half usage-half-morning {{item.morning ? 'usage-half-morning-on' : ''}}"></view>
+              <view class="usage-half usage-half-evening {{item.evening ? 'usage-half-evening-on' : ''}}"></view>
+            </view>
           </view>
         </view>
       </view>
@@ -78,9 +85,9 @@
         </view>
       </view>
     </view>
-    <view class="card empty-state" wx:else>
+    <view class="card empty-state week-empty" wx:else>
       <view class="empty-title">本周还没有记录</view>
-      <view class="empty-text">先在今日页记录几次使用，这里会自动生成使用概览。</view>
+      <view class="empty-text">{{week.start}} - {{week.end}} 暂无记录。</view>
       <button class="primary empty-action" hover-class="button-hover" bindtap="goToday">去记录</button>
     </view>
   </view>

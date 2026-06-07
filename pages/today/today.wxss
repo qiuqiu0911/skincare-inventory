@@ -16,8 +16,8 @@
 .page-date {
   margin-top: 4rpx;
   color: #9ca3af;
-  font-size: 24rpx;
-  line-height: 34rpx;
+  font-size: 25rpx;
+  line-height: 36rpx;
 }
 
 .time-tabs {
@@ -45,7 +45,7 @@
 
 .record-count {
   color: #9ca3af;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 700;
   letter-spacing: 2rpx;
 }
@@ -101,8 +101,8 @@
   flex: 1;
   min-width: 0;
   color: #6b7280;
-  font-size: 27rpx;
-  line-height: 36rpx;
+  font-size: 29rpx;
+  line-height: 38rpx;
   word-break: break-all;
 }
 
@@ -115,8 +115,8 @@
 .record-amount {
   max-width: 150rpx;
   color: #333333;
-  font-size: 25rpx;
-  line-height: 34rpx;
+  font-size: 24rpx;
+  line-height: 32rpx;
   word-break: break-all;
 }
 
@@ -215,8 +215,8 @@
   border-radius: 32rpx;
   background: #ffffff;
   color: #9ca3af;
-  font-size: 24rpx;
-  line-height: 34rpx;
+  font-size: 25rpx;
+  line-height: 36rpx;
   box-shadow: 0 12rpx 26rpx rgba(17, 24, 39, 0.045);
 }
 

@@ -16,9 +16,9 @@
 .page-subtitle {
   margin-top: 6rpx;
   color: #8b95a1;
-  font-size: 27rpx;
+  font-size: 25rpx;
   font-weight: 500;
-  line-height: 38rpx;
+  line-height: 36rpx;
 }
 
 .category-form {
@@ -39,7 +39,7 @@
   min-height: 86rpx;
   border-radius: 22rpx;
   background: #fafbfc;
-  font-size: 27rpx;
+  font-size: 28rpx;
 }
 
 .add-category {
@@ -92,9 +92,9 @@
 
 .section-count {
   color: #9ca3af;
-  font-size: 23rpx;
+  font-size: 24rpx;
   font-weight: 700;
-  line-height: 32rpx;
+  line-height: 34rpx;
 }
 
 .category-list {
@@ -172,9 +172,9 @@
 .category-hint {
   flex-shrink: 0;
   color: #c0c7d0;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 700;
-  line-height: 32rpx;
+  line-height: 34rpx;
 }
 
 .category-delete-button {
@@ -235,9 +235,9 @@
   margin: 28rpx 38rpx 36rpx;
   color: #a3adbb;
   text-align: center;
-  font-size: 25rpx;
+  font-size: 24rpx;
   font-weight: 600;
-  line-height: 38rpx;
+  line-height: 36rpx;
 }
 
 .data-note {

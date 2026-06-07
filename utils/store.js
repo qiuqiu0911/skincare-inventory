@@ -631,10 +631,14 @@ function weeklyUsageMatrix(baseDateKey = todayKey(), firstWeekday = localFirstWe
       total: 0,
       days: {}
     };
-    if (!summary.days[record.date]) {
+    const dayUsage = summary.days[record.date] || { morning: false, evening: false };
+    if (!dayUsage.morning && !dayUsage.evening) {
       summary.total += 1;
     }
-    summary.days[record.date] = true;
+    summary.days[record.date] = {
+      ...dayUsage,
+      [record.timeOfDay === "evening" ? "evening" : "morning"]: true
+    };
     summaryMap.set(record.productNameSnapshot, summary);
     return summaryMap;
   }, new Map());

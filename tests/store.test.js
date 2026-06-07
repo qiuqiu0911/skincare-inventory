@@ -142,7 +142,7 @@ function testWeeklyStatsComparesPreviousWeek() {
   assert.equal(cream.previousCount, 1);
 }
 
-function testWeeklyUsageMatrixUsesOneDotPerProductDay() {
+function testWeeklyUsageMatrixTracksMorningAndEvening() {
   reset();
   store.addUsageRecord({ name: "精华 A", categoryName: "精华", date: "2026-06-02", timeOfDay: "morning" });
   store.addUsageRecord({ name: "精华 A", categoryName: "精华", date: "2026-06-02", timeOfDay: "evening" });
@@ -152,8 +152,8 @@ function testWeeklyUsageMatrixUsesOneDotPerProductDay() {
   const row = matrix.rows.find((item) => item.productName === "精华 A");
   assert.equal(matrix.days[0], "2026-06-01");
   assert.equal(row.total, 2);
-  assert.equal(row.days["2026-06-02"], true);
-  assert.equal(row.days["2026-06-03"], true);
+  assert.deepEqual(row.days["2026-06-02"], { morning: true, evening: true });
+  assert.deepEqual(row.days["2026-06-03"], { morning: true, evening: false });
 }
 
 function testInputValidationBoundaries() {
@@ -355,7 +355,7 @@ testDeleteStockedItem();
 testUpdateUsageRecordKeepsRecordIdentity();
 testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
-testWeeklyUsageMatrixUsesOneDotPerProductDay();
+testWeeklyUsageMatrixTracksMorningAndEvening();
 testInputValidationBoundaries();
 testInvalidStockTransitionsThrow();
 testQueryResultsAreCopies();

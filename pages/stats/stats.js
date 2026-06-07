@@ -57,8 +57,8 @@ function buildThreeDays(items) {
   });
 }
 
-function buildWeek() {
-  const matrix = store.weeklyUsageMatrix();
+function buildWeek(baseDateKey = store.todayKey()) {
+  const matrix = store.weeklyUsageMatrix(baseDateKey);
   const days = matrix.days.map((dateKey) => {
     const date = parseLocalDate(dateKey);
     return {
@@ -71,7 +71,8 @@ function buildWeek() {
     ...row,
     cells: days.map((day) => ({
       date: day.date,
-      used: !!row.days[day.date]
+      morning: !!(row.days[day.date] && row.days[day.date].morning),
+      evening: !!(row.days[day.date] && row.days[day.date].evening)
     }))
   }));
   return {
@@ -89,6 +90,7 @@ Page({
     activeTab: "3days",
     tabs: REVIEW_TABS,
     rangeText: "",
+    weekBaseDate: store.todayKey(),
     threeDays: [],
     week: {
       days: [],
@@ -121,7 +123,7 @@ Page({
 
   refresh() {
     try {
-      const week = buildWeek();
+      const week = buildWeek(this.data.weekBaseDate);
       this.setData({
         threeDays: buildThreeDays(store.threeDayStats()),
         week,
@@ -131,6 +133,42 @@ Page({
       this.setData({ threeDays: [], week: { days: [], rows: [], start: "", end: "", recordCount: 0, productCount: 0 } });
       wx.showToast({ title: error.message, icon: "none" });
     }
+  },
+
+  updateWeekByOffset(offset) {
+    const weekBaseDate = store.todayKey(addDays(parseLocalDate(this.data.weekBaseDate), offset * 7));
+    const week = buildWeek(weekBaseDate);
+    this.setData({
+      weekBaseDate,
+      week,
+      rangeText: `${week.start} - ${week.end}`
+    });
+  },
+
+  onWeekTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) {
+      return;
+    }
+    this.weekTouchStartX = touch.clientX;
+    this.weekTouchStartY = touch.clientY;
+  },
+
+  onWeekTouchEnd(event) {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch || this.weekTouchStartX === undefined) {
+      return;
+    }
+    const deltaX = touch.clientX - this.weekTouchStartX;
+    const deltaY = touch.clientY - this.weekTouchStartY;
+
+    this.weekTouchStartX = undefined;
+    this.weekTouchStartY = undefined;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX) || Math.abs(deltaX) < 55) {
+      return;
+    }
+    this.updateWeekByOffset(deltaX < 0 ? 1 : -1);
   },
 
   switchTab(event) {
