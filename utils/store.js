@@ -94,6 +94,10 @@ function addDays(date, days) {
   return next;
 }
 
+function compareRecordCreatedAt(left, right) {
+  return String(left.createdAt || left.updatedAt || "").localeCompare(String(right.createdAt || right.updatedAt || ""));
+}
+
 function localFirstWeekday() {
   try {
     const language = typeof wx !== "undefined" ? wx.getSystemInfoSync().language : undefined;
@@ -565,6 +569,7 @@ function listTodayRecords(dateKey = todayKey()) {
   return ensureSeedData()
     .records
     .filter((record) => record.date === dateKey)
+    .sort(compareRecordCreatedAt)
     .map(cloneItem);
 }
 

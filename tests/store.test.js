@@ -102,6 +102,42 @@ function testUpdateUsageRecordKeepsRecordIdentity() {
   assert.equal(store.listTodayRecords("2026-06-07")[0].timeOfDay, "evening");
 }
 
+function testListTodayRecordsSortsByCreatedAt() {
+  reset();
+  store.importStoreSnapshot({
+    data: {
+      categories: [{ id: "cat_serum", name: "精华", sortOrder: 0 }],
+      products: [],
+      stocks: [],
+      records: [
+        {
+          id: "usage_later",
+          date: "2026-06-07",
+          timeOfDay: "morning",
+          productNameSnapshot: "后记录精华",
+          categoryNameSnapshot: "精华",
+          createdAt: "2026-06-07T08:30:00.000Z",
+          updatedAt: "2026-06-07T08:30:00.000Z"
+        },
+        {
+          id: "usage_earlier",
+          date: "2026-06-07",
+          timeOfDay: "morning",
+          productNameSnapshot: "先记录精华",
+          categoryNameSnapshot: "精华",
+          createdAt: "2026-06-07T08:00:00.000Z",
+          updatedAt: "2026-06-07T08:00:00.000Z"
+        }
+      ]
+    }
+  });
+
+  assert.deepEqual(
+    store.listTodayRecords("2026-06-07").map((record) => record.productNameSnapshot),
+    ["先记录精华", "后记录精华"]
+  );
+}
+
 function testUpdateStockKeepsLifecycleState() {
   reset();
   const stock = store.addStock({
@@ -353,6 +389,7 @@ testStockLifecycleAndDeleteBoundary();
 testOpenOneStockItemOnlySplitsQuantity();
 testDeleteStockedItem();
 testUpdateUsageRecordKeepsRecordIdentity();
+testListTodayRecordsSortsByCreatedAt();
 testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
 testWeeklyUsageMatrixTracksMorningAndEvening();
