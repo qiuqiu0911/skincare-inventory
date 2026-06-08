@@ -7,6 +7,7 @@ const TIME_OPTIONS = [
 ];
 const MAX_AMOUNT_LENGTH = 30;
 const DEFAULT_TIME_OF_DAY = defaultTimeOfDay();
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 function trim(value) {
   return String(value || "").trim();
@@ -48,11 +49,33 @@ function canSubmitRecord(form, submitting) {
   return !submitting && !hasErrors(validateRecordForm(form));
 }
 
+function filterProductOptions(options, keyword) {
+  const query = trim(keyword).toLowerCase();
+  if (!query) {
+    return options;
+  }
+  return options.filter((name) => String(name || "").toLowerCase().includes(query));
+}
+
+function previousDateKey(dateKey) {
+  const parts = String(dateKey).split("-").map(Number);
+  return store.todayKey(new Date(new Date(parts[0], parts[1] - 1, parts[2]).getTime() - ONE_DAY_MS));
+}
+
+function duplicateRecordKey(record) {
+  return [
+    record.timeOfDay,
+    record.productNameSnapshot,
+    record.categoryNameSnapshot
+  ].join("|");
+}
+
 Page({
   data: {
     today: "",
     categories: [],
     productOptions: [],
+    filteredProductOptions: [],
     records: [],
     activeRecords: [],
     timeOptions: TIME_OPTIONS,
@@ -61,6 +84,8 @@ Page({
     submitting: false,
     swipedRecordId: "",
     showForm: false,
+    showProductSelector: false,
+    productSearchKeyword: "",
     editingId: "",
     formErrors: {},
     canSubmit: false,
@@ -127,10 +152,12 @@ Page({
         categoryName
       };
       const records = store.listTodayRecords();
+      const productOptions = store.productOptions();
       this.setData({
         today: store.todayKey(),
         categories,
-        productOptions: store.productOptions(),
+        productOptions,
+        filteredProductOptions: filterProductOptions(productOptions, this.data.productSearchKeyword),
         records,
         activeRecords: records
           .filter((record) => record.timeOfDay === this.data.activeTime)
@@ -227,6 +254,8 @@ Page({
   closeForm() {
     this.setData({
       showForm: false,
+      showProductSelector: false,
+      productSearchKeyword: "",
       editingId: "",
       formErrors: {},
       submitting: false
@@ -256,6 +285,50 @@ Page({
     });
   },
 
+  copyYesterdayRecords() {
+    const targetDate = store.todayKey();
+    const sourceDate = previousDateKey(targetDate);
+    const activeTime = this.data.activeTime;
+    const sourceRecords = store.listTodayRecords(sourceDate)
+      .filter((record) => record.timeOfDay === activeTime);
+    if (!sourceRecords.length) {
+      wx.showToast({
+        title: `昨日${activeTime === "morning" ? "早间" : "晚间"}无记录`,
+        icon: "none"
+      });
+      return;
+    }
+
+    const existingKeys = new Set(
+      store.listTodayRecords(targetDate)
+        .filter((record) => record.timeOfDay === activeTime)
+        .map(duplicateRecordKey)
+    );
+    let copiedCount = 0;
+    try {
+      sourceRecords.forEach((record) => {
+        if (existingKeys.has(duplicateRecordKey(record))) {
+          return;
+        }
+        store.addUsageRecord({
+          name: record.productNameSnapshot,
+          categoryName: record.categoryNameSnapshot,
+          amount: record.amount,
+          timeOfDay: record.timeOfDay,
+          date: targetDate
+        });
+        copiedCount += 1;
+      });
+      this.refresh();
+      wx.showToast({
+        title: copiedCount ? `已复制 ${copiedCount} 项` : "今天已存在",
+        icon: copiedCount ? "success" : "none"
+      });
+    } catch (error) {
+      wx.showToast({ title: error.message, icon: "none" });
+    }
+  },
+
   onInput(event) {
     const field = event.currentTarget.dataset.field;
     this.setForm({
@@ -267,8 +340,32 @@ Page({
     });
   },
 
-  onProductPick(event) {
-    const productName = this.data.productOptions[Number(event.detail.value)];
+  openProductSelector() {
+    this.setData({
+      showProductSelector: true,
+      productSearchKeyword: "",
+      filteredProductOptions: this.data.productOptions
+    });
+  },
+
+  closeProductSelector() {
+    this.setData({
+      showProductSelector: false,
+      productSearchKeyword: "",
+      filteredProductOptions: this.data.productOptions
+    });
+  },
+
+  onProductSearchInput(event) {
+    const productSearchKeyword = event.detail.value;
+    this.setData({
+      productSearchKeyword,
+      filteredProductOptions: filterProductOptions(this.data.productOptions, productSearchKeyword)
+    });
+  },
+
+  selectProduct(event) {
+    const productName = event.currentTarget.dataset.name;
     this.setForm({
       ...this.data.form,
       productName
@@ -276,6 +373,7 @@ Page({
       ...this.data.formErrors,
       productName: ""
     });
+    this.closeProductSelector();
   },
 
   onCategoryPick(event) {

@@ -161,7 +161,7 @@ Page({
             ...stock,
             swiped: stock.id === this.data.swipedStockId,
             swipeClass: stock.id === this.data.swipedStockId
-              ? (stock.status === "stocked" ? "stock-card-front-open-delete" : "stock-card-front-open-edit")
+              ? (stock.status === "stocked" ? "stock-card-front-open-three" : "stock-card-front-open-two")
               : ""
           })),
         stockCounts,
@@ -288,6 +288,27 @@ Page({
 
   swipeEditStock(event) {
     this.editStock(event);
+  },
+
+  copyStock(event) {
+    this.closeSwipe();
+    const id = event.currentTarget.dataset.id;
+    const stock = store.listStocks().find((item) => item.id === id);
+    if (!stock) {
+      return;
+    }
+    this.setData({
+      showForm: true,
+      editingStockId: "",
+      formErrors: {}
+    });
+    this.setForm({
+      productName: stock.productNameSnapshot,
+      categoryName: stock.categoryNameSnapshot,
+      capacity: stock.capacitySnapshot,
+      quantity: stock.quantity,
+      expiryDate: stock.expiryDateSnapshot
+    });
   },
 
   swipeDeleteStock(event) {

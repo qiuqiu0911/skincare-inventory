@@ -32,6 +32,9 @@
   <view class="stock-list" wx:if="{{stocks.length}}">
     <view class="stock-swipe-item" wx:for="{{stocks}}" wx:key="id" data-id="{{item.id}}" data-status="{{item.status}}" bindtouchstart="onStockTouchStart" bindtouchend="onStockTouchEnd">
       <view class="stock-swipe-actions {{item.swiped ? 'stock-swipe-actions-active' : ''}}">
+        <view class="swipe-icon-button swipe-copy" role="button" hover-class="tap-hover" aria-label="复制库存 {{item.productNameSnapshot}}" data-id="{{item.id}}" catchtap="copyStock">
+          <image class="swipe-action-icon" src="/assets/icons/action-copy.svg" mode="aspectFit" alt="" />
+        </view>
         <view class="swipe-icon-button swipe-edit" role="button" hover-class="tap-hover" aria-label="编辑库存 {{item.productNameSnapshot}}" data-id="{{item.id}}" catchtap="swipeEditStock">
           <image class="swipe-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" alt="" />
         </view>

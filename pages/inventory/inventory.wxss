@@ -114,7 +114,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-3);
-  width: 220rpx;
+  width: 324rpx;
   padding-right: var(--space-4);
   box-sizing: border-box;
   opacity: 0;
@@ -139,12 +139,12 @@
   will-change: transform;
 }
 
-.stock-card-front-open-edit {
-  transform: translateX(-104rpx);
+.stock-card-front-open-two {
+  transform: translateX(-208rpx);
 }
 
-.stock-card-front-open-delete {
-  transform: translateX(-208rpx);
+.stock-card-front-open-three {
+  transform: translateX(-312rpx);
 }
 
 .stock-content {
@@ -243,6 +243,10 @@
 .swipe-edit {
   background: var(--color-surface-elevated);
   box-shadow: var(--shadow-xs);
+}
+
+.swipe-copy {
+  background: var(--color-brand-accent-soft);
 }
 
 .swipe-action-icon {

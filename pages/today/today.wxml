@@ -41,9 +41,13 @@
   </view>
 
   <view class="bottom-action">
-    <button class="add-dashed" hover-class="tap-hover" aria-label="添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="openCreateForm">
+    <button class="copy-yesterday-button" hover-class="button-hover" aria-label="复制昨日{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="copyYesterdayRecords">
+      <image class="bottom-action-icon" src="/assets/icons/action-copy.svg" mode="aspectFit" alt="" />
+      <text>复制昨日</text>
+    </button>
+    <button class="primary add-record-button" hover-class="button-hover" aria-label="添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="openCreateForm">
       <view class="add-icon" aria-hidden="true">+</view>
-      <view>添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录</view>
+      <text>添加记录</text>
     </button>
   </view>
 
@@ -85,12 +89,22 @@
     <view class="field">
       <view class="field-line">
         <text class="field-label">产品名称</text>
-        <picker class="picker-bare" wx:if="{{productOptions.length}}" range="{{productOptions}}" bindchange="onProductPick">
-          <view class="history-chip">从历史选择</view>
-        </picker>
+        <view wx:if="{{productOptions.length}}" class="history-chip" role="button" hover-class="tap-hover" bindtap="openProductSelector">从历史选择</view>
       </view>
       <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：小棕瓶精华" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
       <view class="field-error" wx:if="{{formErrors.productName}}">{{formErrors.productName}}</view>
+    </view>
+
+    <view class="product-selector" wx:if="{{showProductSelector}}">
+      <view class="product-selector-head">
+        <view class="product-selector-title">选择历史产品</view>
+        <view class="product-selector-close" role="button" aria-label="关闭历史产品选择" hover-class="tap-hover" bindtap="closeProductSelector">×</view>
+      </view>
+      <input class="product-search-input" placeholder="搜索产品名称" value="{{productSearchKeyword}}" bindinput="onProductSearchInput" />
+      <scroll-view scroll-y class="product-option-list">
+        <view wx:for="{{filteredProductOptions}}" wx:key="*this" class="product-option" role="button" hover-class="tap-hover" data-name="{{item}}" bindtap="selectProduct">{{item}}</view>
+        <view wx:if="{{!filteredProductOptions.length}}" class="product-option-empty">没有匹配的历史产品</view>
+      </scroll-view>
     </view>
 
     <view class="field">

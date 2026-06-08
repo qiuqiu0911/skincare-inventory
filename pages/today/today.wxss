@@ -1,5 +1,6 @@
 .today-page {
   min-height: 100vh;
+  padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
 }
 
 .time-tabs {
@@ -165,42 +166,76 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(120rpx + env(safe-area-inset-bottom));
-  padding: 0 var(--page-padding-x);
+  bottom: calc(100rpx + env(safe-area-inset-bottom));
+  padding: var(--space-3) var(--page-padding-x) var(--space-4);
   z-index: 5;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: rgba(250, 248, 244, 0.94);
+  border-top: 1rpx solid var(--color-border-subtle);
 }
 
-.add-dashed {
-  width: 100%;
-  min-height: 168rpx;
+.copy-yesterday-button {
+  flex: 1;
+  height: 96rpx;
+  min-width: 0;
+  min-height: 96rpx;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f4ee 100%);
+  border: 1rpx solid var(--color-border-subtle);
+  color: var(--color-brand-accent-strong);
+  box-shadow: var(--shadow-sm);
+  gap: var(--space-2);
+}
+
+.add-record-button {
+  flex: 1;
+  min-width: 0;
+  min-height: 96rpx;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 3rpx dashed var(--color-border-default);
+  gap: var(--space-2);
   border-radius: var(--radius-lg);
-  background: var(--color-surface-elevated);
-  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-sm);
+  padding: 0 var(--space-5);
+}
+
+.bottom-action button {
   font-size: var(--fs-body-sm);
   line-height: var(--lh-body-sm);
-  font-weight: var(--fw-semibold);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
+}
+
+.bottom-action text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-action-icon {
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
 }
 
 .add-icon {
-  width: 56rpx;
-  height: 56rpx;
-  margin-bottom: var(--space-2);
-  border: 1rpx solid var(--color-border-default);
+  width: 36rpx;
+  height: 36rpx;
   border-radius: var(--radius-pill);
-  line-height: 52rpx;
-  font-size: 32rpx;
-  color: var(--color-text-secondary);
+  line-height: 34rpx;
+  font-size: 30rpx;
+  color: var(--color-text-inverse);
 }
 
 /* ========== Sheet 表单 ========== */
+.today-page .bottom-sheet {
+  overflow-y: auto;
+}
+
 .sheet-time-tabs {
   margin-bottom: var(--space-5);
 }
@@ -245,4 +280,79 @@
   left: -8rpx;
   right: -8rpx;
   bottom: -16rpx;
+}
+
+.product-selector {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-5);
+  padding: var(--space-4);
+  border: 1rpx solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+  box-sizing: border-box;
+}
+
+.product-selector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.product-selector-title {
+  color: var(--color-text-primary);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-body-sm);
+}
+
+.product-selector-close {
+  width: 56rpx;
+  height: 56rpx;
+  min-width: 56rpx;
+  min-height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.product-search-input {
+  min-height: 76rpx;
+  margin-bottom: var(--space-3);
+  background: var(--color-surface-elevated);
+}
+
+.product-option-list {
+  height: 360rpx;
+}
+
+.product-option {
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  border-top: 1rpx solid var(--color-border-subtle);
+  color: var(--color-text-primary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  word-break: break-all;
+}
+
+.product-option:first-child {
+  border-top: 0;
+}
+
+.product-option-empty {
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
 }
