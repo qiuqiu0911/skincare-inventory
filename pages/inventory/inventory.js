@@ -189,6 +189,16 @@ Page({
     this.refresh(this.data.status);
   },
 
+  resetFilterCategory() {
+    this.setData({
+      filterCategoryName: "",
+      swipedStockId: ""
+    });
+    this.refresh(this.data.status);
+  },
+
+  noop() {},
+
   toggleSortMode() {
     const sortMode = this.data.sortMode === "name" ? "expiry" : "name";
     this.setData({

@@ -7,13 +7,13 @@
   ],
   "window": {
     "navigationBarTitleText": "护肤记录",
-    "navigationBarBackgroundColor": "#FAF9F6",
+    "navigationBarBackgroundColor": "#FAF8F4",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FAF9F6"
+    "backgroundColor": "#FAF8F4"
   },
   "tabBar": {
-    "color": "#C7CCD1",
-    "selectedColor": "#3B82F6",
+    "color": "#A1A1AA",
+    "selectedColor": "#1C1C1E",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [

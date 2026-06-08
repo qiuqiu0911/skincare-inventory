@@ -19,11 +19,11 @@
     </view>
     <view class="record-swipe-item" wx:for="{{activeRecords}}" wx:key="id" data-id="{{item.id}}" bindtouchstart="onRecordTouchStart" bindtouchend="onRecordTouchEnd">
       <view class="record-swipe-actions {{item.swiped ? 'record-swipe-actions-active' : ''}}">
-        <view class="record-swipe-button record-swipe-edit" aria-role="button" aria-label="编辑记录" data-id="{{item.id}}" catchtap="editRecord">
-          <image class="record-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" />
+        <view class="record-swipe-button record-swipe-edit" role="button" hover-class="tap-hover" aria-label="编辑记录 {{item.productNameSnapshot}}" data-id="{{item.id}}" catchtap="editRecord">
+          <image class="record-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" alt="" />
         </view>
-        <view class="record-swipe-button record-swipe-delete" aria-role="button" aria-label="删除记录" data-id="{{item.id}}" catchtap="deleteRecord">
-          <image class="record-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" />
+        <view class="record-swipe-button record-swipe-delete" role="button" hover-class="tap-hover" aria-label="删除记录 {{item.productNameSnapshot}}" data-id="{{item.id}}" catchtap="deleteRecord">
+          <image class="record-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" alt="" />
         </view>
       </view>
       <view class="record-row {{item.swiped ? 'record-row-open' : ''}}" bindtap="closeRecordSwipe">
@@ -41,17 +41,17 @@
   </view>
 
   <view class="bottom-action">
-    <button class="add-dashed" hover-class="tap-hover" bindtap="openCreateForm">
-      <view class="add-icon">+</view>
+    <button class="add-dashed" hover-class="tap-hover" aria-label="添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="openCreateForm">
+      <view class="add-icon" aria-hidden="true">+</view>
       <view>添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录</view>
     </button>
   </view>
 
   <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>
-  <view class="bottom-sheet" wx:if="{{showForm}}">
+  <view class="bottom-sheet" wx:if="{{showForm}}" role="dialog" aria-modal="true" aria-labelledby="today-sheet-title" catchtouchmove="noop">
     <view class="sheet-head">
-      <view class="sheet-title">{{editingId ? '编辑护肤记录' : '添加护肤记录'}}</view>
-      <button class="close-button" size="mini" bindtap="closeForm">×</button>
+      <view class="sheet-title" id="today-sheet-title">{{editingId ? '编辑护肤记录' : '添加护肤记录'}}</view>
+      <button class="close-button" hover-class="button-hover" aria-label="关闭" bindtap="closeForm">×</button>
     </view>
 
     <view class="segmented sheet-time-tabs">
@@ -85,7 +85,7 @@
     <view class="field">
       <view class="field-line">
         <text class="field-label">产品名称</text>
-        <picker wx:if="{{productOptions.length}}" range="{{productOptions}}" bindchange="onProductPick">
+        <picker class="picker-bare" wx:if="{{productOptions.length}}" range="{{productOptions}}" bindchange="onProductPick">
           <view class="history-chip">从历史选择</view>
         </picker>
       </view>
@@ -100,8 +100,8 @@
     </view>
 
     <view class="sheet-actions">
-      <button class="secondary" bindtap="closeForm">{{editingId ? '取消' : '完成'}}</button>
-      <button class="primary" disabled="{{!canSubmit || submitting}}" bindtap="submitRecord">{{submitting ? '保存中...' : '保存'}}</button>
+      <button class="secondary" hover-class="button-hover" bindtap="closeForm">取消</button>
+      <button class="primary" hover-class="button-hover" disabled="{{!canSubmit || submitting}}" aria-disabled="{{!canSubmit || submitting}}" bindtap="submitRecord">{{submitting ? '保存中...' : '保存'}}</button>
     </view>
   </view>
 </view>

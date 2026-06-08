@@ -1,11 +1,13 @@
 <view class="page inventory-page">
   <view class="page-head">
-    <view class="page-title">产品库存</view>
+    <view>
+      <view class="page-title">产品库存</view>
+    </view>
     <view class="page-actions">
-      <view class="sort-fab" aria-role="button" aria-label="切换库存排序" hover-class="tap-hover" bindtap="toggleSortMode">
-        <image class="sort-fab-icon" src="/assets/icons/action-sort.png" mode="aspectFit" />
+      <view class="sort-fab" role="button" aria-label="切换库存排序" hover-class="tap-hover" bindtap="toggleSortMode">
+        <image class="sort-fab-icon" src="/assets/icons/action-sort.png" mode="aspectFit" alt="" />
       </view>
-      <view class="add-stock-fab" aria-role="button" aria-label="新增库存" hover-class="tap-hover" bindtap="openCreateForm">+</view>
+      <view class="add-stock-fab" role="button" aria-label="新增库存" hover-class="tap-hover" bindtap="openCreateForm">+</view>
     </view>
   </view>
 
@@ -30,11 +32,11 @@
   <view class="stock-list" wx:if="{{stocks.length}}">
     <view class="stock-swipe-item" wx:for="{{stocks}}" wx:key="id" data-id="{{item.id}}" data-status="{{item.status}}" bindtouchstart="onStockTouchStart" bindtouchend="onStockTouchEnd">
       <view class="stock-swipe-actions {{item.swiped ? 'stock-swipe-actions-active' : ''}}">
-        <view class="swipe-icon-button swipe-edit" aria-role="button" aria-label="编辑库存" data-id="{{item.id}}" catchtap="swipeEditStock">
-          <image class="swipe-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" />
+        <view class="swipe-icon-button swipe-edit" role="button" hover-class="tap-hover" aria-label="编辑库存 {{item.productNameSnapshot}}" data-id="{{item.id}}" catchtap="swipeEditStock">
+          <image class="swipe-action-icon" src="/assets/icons/action-edit.png" mode="aspectFit" alt="" />
         </view>
-        <view wx:if="{{item.status === 'stocked'}}" class="swipe-icon-button swipe-delete {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="删除库存" data-id="{{item.id}}" catchtap="swipeDeleteStock">
-          <image class="swipe-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" />
+        <view wx:if="{{item.status === 'stocked'}}" class="swipe-icon-button swipe-delete {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" role="button" hover-class="tap-hover" aria-label="删除库存 {{item.productNameSnapshot}}" aria-disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" catchtap="swipeDeleteStock">
+          <image class="swipe-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" alt="" />
         </view>
       </view>
 
@@ -50,11 +52,11 @@
             </view>
           </view>
           <view class="stock-actions" wx:if="{{item.status === 'stocked' || item.status === 'active'}}">
-            <view wx:if="{{item.status === 'stocked'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="记录开瓶" data-id="{{item.id}}" catchtap="openStock">
-              <image class="stock-action-icon" src="/assets/icons/stock-open.png" mode="aspectFit" />
+            <view wx:if="{{item.status === 'stocked'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" role="button" hover-class="tap-hover" aria-label="记录开瓶" aria-disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" catchtap="openStock">
+              <image class="stock-action-icon" src="/assets/icons/stock-open.png" mode="aspectFit" alt="" />
             </view>
-            <view wx:if="{{item.status === 'active'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" aria-role="button" aria-label="标记用完" data-id="{{item.id}}" catchtap="finishStock">
-              <image class="stock-action-icon" src="/assets/icons/stock-finish.png" mode="aspectFit" />
+            <view wx:if="{{item.status === 'active'}}" class="stock-action-button primary-action {{updatingStockId === item.id ? 'stock-action-disabled' : ''}}" role="button" hover-class="tap-hover" aria-label="标记用完" aria-disabled="{{updatingStockId === item.id}}" data-id="{{item.id}}" catchtap="finishStock">
+              <image class="stock-action-icon" src="/assets/icons/stock-finish.png" mode="aspectFit" alt="" />
             </view>
           </view>
         </view>
@@ -65,13 +67,15 @@
   <view class="empty-record" wx:else>
     <view class="empty-title">{{emptyTitle}}</view>
     <view class="empty-text">{{filterCategoryName ? '当前分类下暂无该状态库存。' : emptyText}}</view>
+    <button wx:if="{{filterCategoryName}}" class="secondary empty-action" hover-class="button-hover" bindtap="resetFilterCategory">查看全部分类</button>
+    <button wx:else class="primary empty-action" hover-class="button-hover" bindtap="openCreateForm">新增库存</button>
   </view>
 
   <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>
-  <view class="bottom-sheet" wx:if="{{showForm}}">
+  <view class="bottom-sheet" wx:if="{{showForm}}" role="dialog" aria-modal="true" aria-labelledby="inventory-sheet-title" catchtouchmove="noop">
     <view class="sheet-head">
-      <view class="sheet-title">{{editingStockId ? '编辑库存' : '添加库存'}}</view>
-      <button class="close-button" size="mini" bindtap="closeForm">×</button>
+      <view class="sheet-title" id="inventory-sheet-title">{{editingStockId ? '编辑库存' : '添加库存'}}</view>
+      <button class="close-button" hover-class="button-hover" aria-label="关闭" bindtap="closeForm">×</button>
     </view>
 
     <view class="field">
@@ -115,8 +119,8 @@
     </view>
 
     <view class="sheet-actions">
-      <button class="secondary" bindtap="closeForm">取消</button>
-      <button class="primary" disabled="{{!canSubmit || submitting}}" bindtap="submitStock">{{submitting ? '保存中...' : '保存'}}</button>
+      <button class="secondary" hover-class="button-hover" bindtap="closeForm">取消</button>
+      <button class="primary" hover-class="button-hover" disabled="{{!canSubmit || submitting}}" aria-disabled="{{!canSubmit || submitting}}" bindtap="submitStock">{{submitting ? '保存中...' : '保存'}}</button>
     </view>
   </view>
 </view>

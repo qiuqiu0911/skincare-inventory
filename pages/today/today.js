@@ -233,6 +233,8 @@ Page({
     });
   },
 
+  noop() {},
+
   editRecord(event) {
     this.closeRecordSwipe();
     const id = event.currentTarget.dataset.id;
