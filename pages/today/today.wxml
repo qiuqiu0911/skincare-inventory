@@ -26,10 +26,11 @@
           <image class="record-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" alt="" />
         </view>
       </view>
-      <view class="record-row {{item.swiped ? 'record-row-open' : ''}}" bindtap="closeRecordSwipe">
+      <view class="record-row {{item.swiped ? 'record-row-open' : ''}} {{draggingRecordId === item.id ? 'record-row-dragging' : ''}}" bindtap="closeRecordSwipe">
         <view class="record-name">{{item.productNameSnapshot}}</view>
         <view class="record-side">
           <text class="record-amount">{{item.amount || '适量'}}</text>
+          <view class="record-drag-handle" role="button" aria-label="拖动调整 {{item.productNameSnapshot}} 顺序" data-id="{{item.id}}" catchtouchstart="onRecordDragStart" catchtouchmove="onRecordDragMove" catchtouchend="onRecordDragEnd" catchtouchcancel="onRecordDragEnd">≡</view>
         </view>
       </view>
     </view>

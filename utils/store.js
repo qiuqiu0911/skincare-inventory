@@ -95,7 +95,25 @@ function addDays(date, days) {
 }
 
 function compareRecordCreatedAt(left, right) {
+  const leftOrder = Number(left.displayOrder);
+  const rightOrder = Number(right.displayOrder);
+  if (Number.isFinite(leftOrder) && Number.isFinite(rightOrder) && leftOrder !== rightOrder) {
+    return leftOrder - rightOrder;
+  }
   return String(left.createdAt || left.updatedAt || "").localeCompare(String(right.createdAt || right.updatedAt || ""));
+}
+
+function nextRecordDisplayOrder(store, date, timeOfDay) {
+  const records = store.records
+    .filter((record) => record.date === date && record.timeOfDay === timeOfDay)
+    .sort(compareRecordCreatedAt);
+  if (!records.length) {
+    return 0;
+  }
+  return records.reduce((maxOrder, record, index) => {
+    const order = Number(record.displayOrder);
+    return Math.max(maxOrder, Number.isFinite(order) ? order : index);
+  }, 0) + 1;
 }
 
 function localFirstWeekday() {
@@ -387,15 +405,18 @@ function findOrCreateProduct(store, input) {
 
 function addUsageRecord(input) {
   const productResult = findOrCreateProduct(ensureSeedData(), input);
+  const date = normalizeDate(input.date) || todayKey();
+  const timeOfDay = input.timeOfDay === "evening" ? "evening" : "morning";
   const record = {
     id: createId("usage"),
-    date: normalizeDate(input.date) || todayKey(),
-    timeOfDay: input.timeOfDay === "evening" ? "evening" : "morning",
+    date,
+    timeOfDay,
     productId: productResult.product.id,
     stockItemId: input.stockItemId || "",
     productNameSnapshot: productResult.product.name,
     categoryNameSnapshot: productResult.category.name,
     amount: trim(input.amount),
+    displayOrder: nextRecordDisplayOrder(productResult.store, date, timeOfDay),
     createdAt: nowIso(),
     updatedAt: nowIso()
   };
@@ -413,14 +434,19 @@ function updateUsageRecord(id, input) {
     throw new Error("记录不存在");
   }
   const productResult = findOrCreateProduct(store, input);
+  const date = normalizeDate(input.date) || existing.date;
+  const timeOfDay = input.timeOfDay === "evening" ? "evening" : "morning";
   const record = {
     ...existing,
-    date: normalizeDate(input.date) || existing.date,
-    timeOfDay: input.timeOfDay === "evening" ? "evening" : "morning",
+    date,
+    timeOfDay,
     productId: productResult.product.id,
     productNameSnapshot: productResult.product.name,
     categoryNameSnapshot: productResult.category.name,
     amount: trim(input.amount),
+    displayOrder: date === existing.date && timeOfDay === existing.timeOfDay
+      ? existing.displayOrder
+      : nextRecordDisplayOrder(productResult.store, date, timeOfDay),
     updatedAt: nowIso()
   };
   writeStoreAndScheduleCloudSync({
@@ -436,6 +462,44 @@ function deleteUsageRecord(id) {
     ...store,
     records: store.records.filter((record) => record.id !== id)
   });
+}
+
+function reorderUsageRecords(dateKey, timeOfDay, orderedIds) {
+  const date = normalizeDate(dateKey) || todayKey();
+  const normalizedTimeOfDay = timeOfDay === "evening" ? "evening" : "morning";
+  const store = ensureSeedData();
+  const targetRecords = store.records
+    .filter((record) => record.date === date && record.timeOfDay === normalizedTimeOfDay)
+    .sort(compareRecordCreatedAt);
+  const targetIds = new Set(targetRecords.map((record) => record.id));
+  const orderedTargetIds = (Array.isArray(orderedIds) ? orderedIds : []).filter((id) => targetIds.has(id));
+  const nextIds = [
+    ...orderedTargetIds,
+    ...targetRecords.map((record) => record.id).filter((id) => !orderedTargetIds.includes(id))
+  ];
+  const orderById = new Map(nextIds.map((id, index) => [id, index]));
+  const timestamp = nowIso();
+  writeStoreAndScheduleCloudSync({
+    ...store,
+    records: store.records.map((record) => {
+      if (!orderById.has(record.id)) {
+        return record;
+      }
+      return {
+        ...record,
+        displayOrder: orderById.get(record.id),
+        updatedAt: timestamp
+      };
+    })
+  });
+  return targetRecords
+    .map((record) => ({
+      ...record,
+      displayOrder: orderById.get(record.id),
+      updatedAt: timestamp
+    }))
+    .sort(compareRecordCreatedAt)
+    .map(cloneItem);
 }
 
 function addStock(input) {
@@ -799,6 +863,7 @@ module.exports = {
   listTodayRecords,
   productOptions,
   refreshFromCloud,
+  reorderUsageRecords,
   resetStoreForTests,
   threeDayStats,
   todayKey,

@@ -70,6 +70,13 @@ function duplicateRecordKey(record) {
   ].join("|");
 }
 
+function moveItem(items, fromIndex, toIndex) {
+  const nextItems = items.slice();
+  const item = nextItems.splice(fromIndex, 1)[0];
+  nextItems.splice(toIndex, 0, item);
+  return nextItems;
+}
+
 Page({
   data: {
     today: "",
@@ -86,6 +93,7 @@ Page({
     showForm: false,
     showProductSelector: false,
     productSearchKeyword: "",
+    draggingRecordId: "",
     editingId: "",
     formErrors: {},
     canSubmit: false,
@@ -228,6 +236,78 @@ Page({
     }
     this.setData({ swipedRecordId: "" });
     this.refresh();
+  },
+
+  captureRecordRects() {
+    if (typeof wx === "undefined" || !wx.createSelectorQuery) {
+      return;
+    }
+    wx.createSelectorQuery()
+      .selectAll(".record-swipe-item")
+      .boundingClientRect((rects) => {
+        this.recordDragRects = rects || [];
+      })
+      .exec();
+  },
+
+  findDragTargetIndex(clientY) {
+    const rects = this.recordDragRects || [];
+    if (!rects.length) {
+      return -1;
+    }
+    return rects.reduce((targetIndex, rect, index) => {
+      const targetRect = rects[targetIndex];
+      const currentDistance = Math.abs(clientY - (rect.top + rect.height / 2));
+      const targetDistance = Math.abs(clientY - (targetRect.top + targetRect.height / 2));
+      return currentDistance < targetDistance ? index : targetIndex;
+    }, 0);
+  },
+
+  onRecordDragStart(event) {
+    const touch = event.touches && event.touches[0];
+    const id = event.currentTarget.dataset.id;
+    if (!touch || !id || this.data.activeRecords.length < 2) {
+      return;
+    }
+    this.recordDragId = id;
+    this.setData({
+      draggingRecordId: id,
+      swipedRecordId: "",
+      activeRecords: this.data.activeRecords.map((record) => ({ ...record, swiped: false }))
+    });
+    this.captureRecordRects();
+  },
+
+  onRecordDragMove(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch || !this.recordDragId) {
+      return;
+    }
+    const fromIndex = this.data.activeRecords.findIndex((record) => record.id === this.recordDragId);
+    const toIndex = this.findDragTargetIndex(touch.clientY);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+      return;
+    }
+    this.setData({
+      activeRecords: moveItem(this.data.activeRecords, fromIndex, toIndex)
+    });
+    this.captureRecordRects();
+  },
+
+  onRecordDragEnd() {
+    if (!this.recordDragId) {
+      return;
+    }
+    const orderedIds = this.data.activeRecords.map((record) => record.id);
+    this.recordDragId = "";
+    try {
+      store.reorderUsageRecords(this.data.today, this.data.activeTime, orderedIds);
+      this.setData({ draggingRecordId: "" });
+      this.refresh();
+    } catch (error) {
+      this.setData({ draggingRecordId: "" });
+      wx.showToast({ title: error.message, icon: "none" });
+    }
   },
 
   switchFormTime(event) {

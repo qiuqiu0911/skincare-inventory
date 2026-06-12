@@ -83,6 +83,12 @@
   transform: translateX(-200rpx);
 }
 
+.record-row-dragging {
+  z-index: 2;
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
 .record-name {
   flex: 1;
   min-width: 0;
@@ -104,6 +110,20 @@
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
   word-break: break-all;
+}
+
+.record-drag-handle {
+  width: 56rpx;
+  height: 56rpx;
+  min-width: 56rpx;
+  min-height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-tertiary);
+  font-size: 36rpx;
+  line-height: 1;
 }
 
 /* ========== 滑动按钮（≥88rpx 命中区） ========== */

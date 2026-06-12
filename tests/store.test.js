@@ -138,6 +138,23 @@ function testListTodayRecordsSortsByCreatedAt() {
   );
 }
 
+function testReorderUsageRecordsPersistsDisplayOrder() {
+  reset();
+  const first = store.addUsageRecord({ name: "洁面", categoryName: "洁面", date: "2026-06-07", timeOfDay: "morning" });
+  const second = store.addUsageRecord({ name: "精华", categoryName: "精华", date: "2026-06-07", timeOfDay: "morning" });
+  const evening = store.addUsageRecord({ name: "晚霜", categoryName: "乳霜", date: "2026-06-07", timeOfDay: "evening" });
+
+  store.reorderUsageRecords("2026-06-07", "morning", [second.id, first.id]);
+
+  assert.deepEqual(
+    store.listTodayRecords("2026-06-07")
+      .filter((record) => record.timeOfDay === "morning")
+      .map((record) => record.productNameSnapshot),
+    ["精华", "洁面"]
+  );
+  assert.equal(store.listTodayRecords("2026-06-07").find((record) => record.id === evening.id).productNameSnapshot, "晚霜");
+}
+
 function testUpdateStockKeepsLifecycleState() {
   reset();
   const stock = store.addStock({
@@ -390,6 +407,7 @@ testOpenOneStockItemOnlySplitsQuantity();
 testDeleteStockedItem();
 testUpdateUsageRecordKeepsRecordIdentity();
 testListTodayRecordsSortsByCreatedAt();
+testReorderUsageRecordsPersistsDisplayOrder();
 testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
 testWeeklyUsageMatrixTracksMorningAndEvening();
