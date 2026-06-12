@@ -340,6 +340,17 @@ Page({
     });
   },
 
+  clearFormField(event) {
+    const field = event.currentTarget.dataset.field;
+    this.setForm({
+      ...this.data.form,
+      [field]: ""
+    }, {
+      ...this.data.formErrors,
+      [field]: ""
+    });
+  },
+
   openProductSelector() {
     this.setData({
       showProductSelector: true,

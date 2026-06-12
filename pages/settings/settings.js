@@ -123,6 +123,14 @@ Page({
     });
   },
 
+  clearCategoryName() {
+    this.setData({
+      categoryName: "",
+      categoryError: "",
+      canSubmit: false
+    });
+  },
+
   addCategory() {
     if (this.data.submitting || !this.data.canSubmit) {
       return;

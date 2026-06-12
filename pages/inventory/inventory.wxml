@@ -83,7 +83,10 @@
 
     <view class="field">
       <text class="field-label">产品名称</text>
-      <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：神仙水" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
+      <view class="clearable-input">
+        <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：神仙水" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
+        <view wx:if="{{form.productName}}" class="clear-input-button" role="button" hover-class="tap-hover" aria-label="清空产品名称" data-field="productName" catchtap="clearFormField">×</view>
+      </view>
       <view class="field-error" wx:if="{{formErrors.productName}}">{{formErrors.productName}}</view>
     </view>
 

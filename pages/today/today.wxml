@@ -91,7 +91,10 @@
         <text class="field-label">产品名称</text>
         <view wx:if="{{productOptions.length}}" class="history-chip" role="button" hover-class="tap-hover" bindtap="openProductSelector">从历史选择</view>
       </view>
-      <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：小棕瓶精华" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
+      <view class="clearable-input">
+        <input class="{{formErrors.productName ? 'input-error' : ''}}" placeholder="例如：小棕瓶精华" value="{{form.productName}}" data-field="productName" bindinput="onInput" />
+        <view wx:if="{{form.productName}}" class="clear-input-button" role="button" hover-class="tap-hover" aria-label="清空产品名称" data-field="productName" catchtap="clearFormField">×</view>
+      </view>
       <view class="field-error" wx:if="{{formErrors.productName}}">{{formErrors.productName}}</view>
     </view>
 

@@ -259,6 +259,35 @@ picker:not(.picker-bare) {
   font-size: var(--fs-body);
 }
 
+.clearable-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.clearable-input input {
+  width: 100%;
+  padding-right: 80rpx;
+}
+
+.clear-input-button {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  font-size: 32rpx;
+  line-height: 1;
+  z-index: 1;
+}
+
 .picker-bare {
   min-height: 0;
   border: 0;

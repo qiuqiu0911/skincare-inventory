@@ -10,7 +10,10 @@
     <view class="field" style="margin-bottom: 0;">
       <text class="field-label">分类名称</text>
       <view class="category-input-row">
-        <input class="category-input {{categoryError ? 'input-error' : ''}}" maxlength="12" placeholder="如:精华、面霜" value="{{categoryName}}" bindinput="onCategoryInput" aria-label="分类名称" />
+        <view class="clearable-input category-clearable-input">
+          <input class="category-input {{categoryError ? 'input-error' : ''}}" maxlength="12" placeholder="如:精华、面霜" value="{{categoryName}}" bindinput="onCategoryInput" aria-label="分类名称" />
+          <view wx:if="{{categoryName}}" class="clear-input-button" role="button" hover-class="tap-hover" aria-label="清空分类名称" catchtap="clearCategoryName">×</view>
+        </view>
         <view class="add-category {{canSubmit && !submitting ? 'add-category-active' : 'add-category-disabled'}}" role="button" hover-class="button-hover" aria-label="添加分类" aria-disabled="{{!canSubmit || submitting}}" bindtap="addCategory">{{submitting ? '保存中' : '添加'}}</view>
       </view>
       <view class="field-error form-error" wx:if="{{categoryError}}" role="alert">{{categoryError}}</view>

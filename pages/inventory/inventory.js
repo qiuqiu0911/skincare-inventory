@@ -257,12 +257,13 @@ Page({
   },
 
   openCreateForm() {
+    const categoryName = this.data.filterCategoryName || this.data.categories[0] || "未分类";
     this.setData({
       showForm: true,
       editingStockId: "",
       formErrors: {}
     });
-    this.setForm(emptyForm(this.data.categories[0] || "未分类"));
+    this.setForm(emptyForm(categoryName));
   },
 
   editStock(event) {
@@ -329,6 +330,17 @@ Page({
     this.setForm({
       ...this.data.form,
       [field]: event.detail.value
+    }, {
+      ...this.data.formErrors,
+      [field]: ""
+    });
+  },
+
+  clearFormField(event) {
+    const field = event.currentTarget.dataset.field;
+    this.setForm({
+      ...this.data.form,
+      [field]: ""
     }, {
       ...this.data.formErrors,
       [field]: ""
