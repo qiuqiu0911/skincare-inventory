@@ -1,4 +1,4 @@
-<view class="page review-page">
+<view class="page review-page {{activeTab === '3days' ? 'review-page-compact' : ''}}">
   <view class="page-head">
     <view>
       <view class="page-title">本周回看</view>
@@ -22,27 +22,30 @@
         </view>
         <view class="makeup-button" role="button" hover-class="tap-hover" aria-label="为 {{item.label}} {{item.shortDate}} 补记" data-date="{{item.date}}" bindtap="addRecordForDay">补记</view>
       </view>
-      <view wx:if="{{item.count}}">
-        <view class="slot-block" wx:if="{{item.morning.length}}">
-          <image class="slot-icon sun" src="/assets/icons/time-morning.png" mode="aspectFit" alt="早间" />
-          <view class="slot-list">
-            <view class="slot-row" wx:for="{{item.morning}}" wx:key="id">
-              <text>{{item.productNameSnapshot}}</text>
-              <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
-            </view>
-          </view>
+      <view class="slot-block">
+        <view class="slot-title morning-title">
+          <image class="slot-title-icon" src="/assets/icons/time-morning.png" mode="aspectFit" alt="早间" />
         </view>
-        <view class="slot-block" wx:if="{{item.evening.length}}">
-          <image class="slot-icon moon" src="/assets/icons/time-evening.png" mode="aspectFit" alt="晚间" />
-          <view class="slot-list">
-            <view class="slot-row" wx:for="{{item.evening}}" wx:key="id">
-              <text>{{item.productNameSnapshot}}</text>
-              <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
-            </view>
+        <view class="slot-list">
+          <view class="slot-row" wx:for="{{item.morning}}" wx:key="id">
+            <text>{{item.productNameSnapshot}}</text>
+            <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
           </view>
+          <view class="empty-line" wx:if="{{!item.morning.length}}">未记录</view>
         </view>
       </view>
-      <view class="empty-line" wx:else>这天还没有记录</view>
+      <view class="slot-block">
+        <view class="slot-title evening-title">
+          <image class="slot-title-icon" src="/assets/icons/time-evening.png" mode="aspectFit" alt="晚间" />
+        </view>
+        <view class="slot-list">
+          <view class="slot-row" wx:for="{{item.evening}}" wx:key="id">
+            <text>{{item.productNameSnapshot}}</text>
+            <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
+          </view>
+          <view class="empty-line" wx:if="{{!item.evening.length}}">未记录</view>
+        </view>
+      </view>
     </view>
   </view>
 

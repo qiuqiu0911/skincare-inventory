@@ -1,9 +1,11 @@
-<view class="page today-page">
+<view class="page today-page" bindtouchstart="onPageTouchStart" bindtouchend="onPageTouchEnd">
   <view class="page-head">
-    <view>
+    <view class="date-nav-button" aria-role="button" aria-label="前一天" hover-class="tap-hover" bindtap="goPreviousDate">‹</view>
+    <view class="date-title-block">
       <view class="page-title">护肤打卡</view>
-      <view class="page-date">{{today}}</view>
+      <view class="page-date">{{viewDateText}}</view>
     </view>
+    <view class="date-nav-button {{canGoNextDate ? '' : 'date-nav-button-disabled'}}" aria-role="button" aria-label="后一天" hover-class="tap-hover" bindtap="goNextDate">›</view>
   </view>
 
   <view class="segmented time-tabs">
@@ -38,13 +40,13 @@
 
   <view class="empty-record" wx:else>
     <view class="empty-title">还没有记录</view>
-    <view class="empty-text">添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录后，会进入今天和回看统计。</view>
+    <view class="empty-text">添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录后，会进入这一天和回看统计。</view>
   </view>
 
   <view class="bottom-action">
-    <button class="copy-yesterday-button" hover-class="button-hover" aria-label="复制昨日{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="copyYesterdayRecords">
+    <button class="copy-yesterday-button" hover-class="button-hover" aria-label="{{copyActionText}}{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="copyPreviousDateRecords">
       <image class="bottom-action-icon" src="/assets/icons/action-copy.svg" mode="aspectFit" alt="" />
-      <text>复制昨日</text>
+      <text>{{copyActionText}}</text>
     </button>
     <button class="primary add-record-button" hover-class="button-hover" aria-label="添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="openCreateForm">
       <view class="add-icon" aria-hidden="true">+</view>

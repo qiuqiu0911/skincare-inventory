@@ -45,7 +45,7 @@ function shortDate(dateKey) {
 }
 
 function buildThreeDays(items) {
-  return items.slice().reverse().map((item) => {
+  return items.map((item) => {
     const records = store.listTodayRecords(item.date);
     return {
       ...item,

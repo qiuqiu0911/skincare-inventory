@@ -6,6 +6,7 @@ const TIME_OPTIONS = [
   { label: "晚间", fullLabel: "晚间护肤", value: "evening" }
 ];
 const MAX_AMOUNT_LENGTH = 30;
+const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_TIME_OF_DAY = defaultTimeOfDay();
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -21,6 +22,60 @@ function emptyForm(timeOfDay) {
     timeOfDay,
     date: store.todayKey()
   };
+}
+
+function parseLocalDate(key) {
+  const parts = String(key).split("-").map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function isValidDateKey(dateKey) {
+  if (!DATE_KEY_PATTERN.test(String(dateKey || ""))) {
+    return false;
+  }
+  return store.todayKey(parseLocalDate(dateKey)) === dateKey;
+}
+
+function isAfterDate(dateKey, targetDateKey) {
+  return parseLocalDate(dateKey).getTime() > parseLocalDate(targetDateKey).getTime();
+}
+
+function shiftDateKey(dateKey, days) {
+  return store.todayKey(addDays(parseLocalDate(dateKey), days));
+}
+
+function normalizeViewDate(dateKey) {
+  const today = store.todayKey();
+  if (!isValidDateKey(dateKey)) {
+    return today;
+  }
+  return isAfterDate(dateKey, today) ? today : dateKey;
+}
+
+function viewDateText(dateKey) {
+  const today = store.todayKey();
+  const yesterday = store.todayKey(addDays(new Date(), -1));
+  if (dateKey === today) {
+    return `${dateKey} · 今天`;
+  }
+  if (dateKey === yesterday) {
+    return `${dateKey} · 昨天`;
+  }
+  return dateKey;
+}
+
+function copyActionText(dateKey) {
+  return dateKey === store.todayKey() ? "复制昨日" : "复制前一天";
+}
+
+function copySourceText(dateKey) {
+  return dateKey === store.todayKey() ? "昨日" : "前一天";
 }
 
 function defaultTimeOfDay(date = new Date()) {
@@ -79,7 +134,11 @@ function moveItem(items, fromIndex, toIndex) {
 
 Page({
   data: {
-    today: "",
+    viewDate: store.todayKey(),
+    viewDateText: viewDateText(store.todayKey()),
+    copyActionText: copyActionText(store.todayKey()),
+    copySourceText: copySourceText(store.todayKey()),
+    canGoNextDate: false,
     categories: [],
     productOptions: [],
     filteredProductOptions: [],
@@ -102,7 +161,15 @@ Page({
 
   onLoad(options = {}) {
     if (options.date) {
-      this.pendingRecordDate = options.date;
+      const viewDate = normalizeViewDate(options.date);
+      this.setData({
+        viewDate,
+        form: {
+          ...this.data.form,
+          date: viewDate
+        }
+      });
+      this.pendingRecordDate = viewDate;
     }
   },
 
@@ -153,16 +220,21 @@ Page({
 
   refresh() {
     try {
+      const viewDate = normalizeViewDate(this.data.viewDate || store.todayKey());
       const categories = store.listCategories().map((item) => item.name);
       const categoryName = this.data.form.categoryName || categories[0] || "未分类";
       const form = {
         ...this.data.form,
         categoryName
       };
-      const records = store.listTodayRecords();
       const productOptions = store.productOptions();
+      const records = store.listTodayRecords(viewDate);
       this.setData({
-        today: store.todayKey(),
+        viewDate,
+        viewDateText: viewDateText(viewDate),
+        copyActionText: copyActionText(viewDate),
+        copySourceText: copySourceText(viewDate),
+        canGoNextDate: viewDate !== store.todayKey(),
         categories,
         productOptions,
         filteredProductOptions: filterProductOptions(productOptions, this.data.productSearchKeyword),
@@ -181,6 +253,72 @@ Page({
       this.setData({ categories: [], productOptions: [], records: [], activeRecords: [] });
       wx.showToast({ title: error.message, icon: "none" });
     }
+  },
+
+  changeViewDate(dayOffset) {
+    const baseDate = this.data.viewDate || store.todayKey();
+    const nextDate = normalizeViewDate(shiftDateKey(baseDate, dayOffset));
+    if (nextDate === this.data.viewDate) {
+      return;
+    }
+    this.setData({
+      viewDate: nextDate,
+      swipedRecordId: "",
+      form: {
+        ...this.data.form,
+        date: nextDate
+      }
+    });
+    this.refresh();
+  },
+
+  goPreviousDate() {
+    this.changeViewDate(-1);
+  },
+
+  goNextDate() {
+    if (!this.data.canGoNextDate) {
+      return;
+    }
+    this.changeViewDate(1);
+  },
+
+  onPageTouchStart(event) {
+    if (this.data.showForm || this.recordGestureActive) {
+      return;
+    }
+    const touch = event.touches && event.touches[0];
+    if (!touch) {
+      return;
+    }
+    this.pageTouchStartX = touch.clientX;
+    this.pageTouchStartY = touch.clientY;
+  },
+
+  onPageTouchEnd(event) {
+    if (this.skipNextPageTouchEnd) {
+      this.skipNextPageTouchEnd = false;
+      this.pageTouchStartX = undefined;
+      this.pageTouchStartY = undefined;
+      return;
+    }
+    if (this.data.showForm || this.pageTouchStartX === undefined) {
+      return;
+    }
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch) {
+      return;
+    }
+    const deltaX = touch.clientX - this.pageTouchStartX;
+    const deltaY = touch.clientY - this.pageTouchStartY;
+
+    this.pageTouchStartX = undefined;
+    this.pageTouchStartY = undefined;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX) || Math.abs(deltaX) < 60) {
+      return;
+    }
+    this.changeViewDate(deltaX > 0 ? -1 : 1);
   },
 
   switchTime(event) {
@@ -202,11 +340,16 @@ Page({
     }
     this.recordTouchStartX = touch.clientX;
     this.recordTouchStartY = touch.clientY;
+    this.recordGestureActive = true;
+    this.skipNextPageTouchEnd = true;
+    this.pageTouchStartX = undefined;
+    this.pageTouchStartY = undefined;
   },
 
   onRecordTouchEnd(event) {
     const touch = event.changedTouches && event.changedTouches[0];
     if (!touch || this.recordTouchStartX === undefined) {
+      this.recordGestureActive = false;
       return;
     }
     const deltaX = touch.clientX - this.recordTouchStartX;
@@ -215,6 +358,7 @@ Page({
 
     this.recordTouchStartX = undefined;
     this.recordTouchStartY = undefined;
+    this.recordGestureActive = false;
 
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
       return;
@@ -301,7 +445,7 @@ Page({
     const orderedIds = this.data.activeRecords.map((record) => record.id);
     this.recordDragId = "";
     try {
-      store.reorderUsageRecords(this.data.today, this.data.activeTime, orderedIds);
+      store.reorderUsageRecords(this.data.viewDate, this.data.activeTime, orderedIds);
       this.setData({ draggingRecordId: "" });
       this.refresh();
     } catch (error) {
@@ -318,8 +462,15 @@ Page({
 
   openCreateForm(options = {}) {
     const categoryName = this.data.categories[0] || "未分类";
-    const date = options.date || (options.currentTarget && options.currentTarget.dataset.date) || store.todayKey();
+    const date = normalizeViewDate(
+      options.date || (options.currentTarget && options.currentTarget.dataset.date) || this.data.viewDate || store.todayKey()
+    );
     this.setData({
+      viewDate: date,
+      viewDateText: viewDateText(date),
+      copyActionText: copyActionText(date),
+      copySourceText: copySourceText(date),
+      canGoNextDate: date !== store.todayKey(),
       showForm: true,
       editingId: "",
       formErrors: {}
@@ -340,6 +491,7 @@ Page({
       formErrors: {},
       submitting: false
     });
+    this.refresh();
   },
 
   noop() {},
@@ -365,15 +517,16 @@ Page({
     });
   },
 
-  copyYesterdayRecords() {
-    const targetDate = store.todayKey();
+  copyPreviousDateRecords() {
+    const targetDate = this.data.viewDate || store.todayKey();
     const sourceDate = previousDateKey(targetDate);
     const activeTime = this.data.activeTime;
+    const sourceText = copySourceText(targetDate);
     const sourceRecords = store.listTodayRecords(sourceDate)
       .filter((record) => record.timeOfDay === activeTime);
     if (!sourceRecords.length) {
       wx.showToast({
-        title: `昨日${activeTime === "morning" ? "早间" : "晚间"}无记录`,
+        title: `${sourceText}${activeTime === "morning" ? "早间" : "晚间"}无记录`,
         icon: "none"
       });
       return;
@@ -401,7 +554,7 @@ Page({
       });
       this.refresh();
       wx.showToast({
-        title: copiedCount ? `已复制 ${copiedCount} 项` : "今天已存在",
+        title: copiedCount ? `已复制 ${copiedCount} 项` : "这天已存在",
         icon: copiedCount ? "success" : "none"
       });
     } catch (error) {
@@ -532,7 +685,7 @@ Page({
     const id = event.currentTarget.dataset.id;
     wx.showModal({
       title: "删除这条记录？",
-      content: "删除后，今天和回看统计会同步更新。",
+      content: "删除后，这一天和回看统计会同步更新。",
       confirmText: "删除",
       confirmColor: "#FF3B30",
       success: (result) => {

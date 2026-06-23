@@ -2,6 +2,19 @@
   min-height: 100vh;
 }
 
+.review-page-compact {
+  height: 100vh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.review-page-compact .page-head,
+.review-page-compact .review-tabs {
+  flex-shrink: 0;
+}
+
 .review-tabs {
   margin-bottom: var(--space-7);
 }
@@ -15,103 +28,150 @@
 
 /* ========== 三日列表 ========== */
 .recent-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.review-page-compact .recent-list {
+  flex: 1;
+  min-height: 0;
 }
 
 .day-card {
-  padding: var(--space-6);
-  border-radius: var(--radius-lg);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .day-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
   border-bottom: 1rpx solid var(--color-border-subtle);
+  flex-shrink: 0;
 }
 
 .day-title {
   color: var(--color-text-primary);
-  font-size: var(--fs-subtitle);
+  font-size: var(--fs-body);
   font-weight: var(--fw-bold);
-  line-height: var(--lh-subtitle);
+  line-height: var(--lh-body);
 }
 
 .day-date {
   margin-top: var(--space-1);
   color: var(--color-text-tertiary);
-  font-size: var(--fs-body-sm);
-  line-height: var(--lh-body-sm);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
 }
 
 .makeup-button {
-  min-width: 120rpx;
-  min-height: var(--tap-min);
-  padding: 0 var(--space-5);
-  display: flex;
+  min-width: 56rpx;
+  height: 40rpx;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-top: var(--space-1);
   border-radius: var(--radius-pill);
   background: var(--color-surface-muted);
-  color: var(--color-text-primary);
-  font-size: var(--fs-body-sm);
+  color: var(--color-text-secondary);
+  font-size: 20rpx;
   font-weight: var(--fw-semibold);
+  line-height: 40rpx;
   flex-shrink: 0;
   transition: opacity var(--motion-fast) var(--ease-standard);
 }
 
 .slot-block {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  margin-top: 0;
+  padding: var(--space-3) var(--space-2);
+  border: 1rpx solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+  box-sizing: border-box;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
+  flex-direction: column;
 }
 
-.slot-icon {
-  width: 56rpx;
-  height: 56rpx;
-  flex-shrink: 0;
-  padding: var(--space-3);
+.slot-block + .slot-block {
+  margin-top: var(--space-3);
+}
+
+.slot-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44rpx;
+  height: 44rpx;
+  min-height: 44rpx;
+  margin-bottom: var(--space-2);
+  padding: 0;
   border-radius: var(--radius-pill);
   box-sizing: border-box;
 }
 
-.sun {
-  background: var(--color-routine-morning-soft);
-}
-
-.moon {
-  background: var(--color-routine-evening-soft);
+.slot-title-icon {
+  width: 26rpx;
+  height: 26rpx;
 }
 
 .slot-list {
-  flex: 1;
-  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.morning-title {
+  color: var(--color-routine-morning);
+  background: var(--color-routine-morning-soft);
+}
+
+.evening-title {
+  color: var(--color-routine-evening);
+  background: var(--color-routine-evening-soft);
 }
 
 .slot-row {
+  position: relative;
+  padding-left: var(--space-4);
   color: var(--color-text-primary);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
+  font-size: 22rpx;
+  line-height: 30rpx;
   word-break: break-all;
 }
 
-.slot-amount {
-  margin-left: var(--space-3);
+.slot-row::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+  top: 0;
   color: var(--color-text-secondary);
-  font-size: var(--fs-caption);
-  line-height: var(--lh-caption);
+  font-weight: var(--fw-bold);
+}
+
+.slot-amount {
+  margin-left: var(--space-2);
+  color: var(--color-text-tertiary);
+  font-size: 20rpx;
+  line-height: 28rpx;
 }
 
 .empty-line {
-  color: var(--color-text-secondary);
-  font-size: var(--fs-body-sm);
-  line-height: var(--lh-body-sm);
+  color: var(--color-text-tertiary);
+  font-size: 21rpx;
+  line-height: 30rpx;
 }
 
 /* ========== 周视图 ========== */

@@ -552,7 +552,29 @@ function updateStock(id, input) {
   return cloneItem(stock);
 }
 
-function nextStockForStatus(stock, status, dateKey) {
+function isSameProductStock(left, right) {
+  if (left.productId && right.productId) {
+    return left.productId === right.productId;
+  }
+  return left.productNameSnapshot === right.productNameSnapshot
+    && left.categoryNameSnapshot === right.categoryNameSnapshot;
+}
+
+function finishPreviousActiveStocks(stocks, openedStock, dateKey, timestamp) {
+  return stocks.map((stock) => {
+    if (stock.id === openedStock.id || stock.status !== "active" || !isSameProductStock(stock, openedStock)) {
+      return stock;
+    }
+    return {
+      ...stock,
+      status: "finished",
+      finishedDate: dateKey,
+      updatedAt: timestamp
+    };
+  });
+}
+
+function nextStockForStatus(stock, status, dateKey, timestamp = nowIso()) {
   if (stock.status === status) {
     return stock;
   }
@@ -561,7 +583,7 @@ function nextStockForStatus(stock, status, dateKey) {
       ...stock,
       status: "active",
       openedDate: dateKey,
-      updatedAt: nowIso()
+      updatedAt: timestamp
     };
   }
   if (status === "finished" && stock.status === "active") {
@@ -569,7 +591,7 @@ function nextStockForStatus(stock, status, dateKey) {
       ...stock,
       status: "finished",
       finishedDate: dateKey,
-      updatedAt: nowIso()
+      updatedAt: timestamp
     };
   }
   throw new Error("库存状态流转无效");
@@ -600,16 +622,21 @@ function updateStockStatus(id, status, date = todayKey()) {
       openedDate: dateKey,
       updatedAt: timestamp
     };
+    const stocks = store.stocks.flatMap((item) => (item.id === id ? [activeStock, stockedStock] : [item]));
     writeStoreAndScheduleCloudSync({
       ...store,
-      stocks: store.stocks.flatMap((item) => (item.id === id ? [activeStock, stockedStock] : [item]))
+      stocks: finishPreviousActiveStocks(stocks, activeStock, dateKey, timestamp)
     });
     return cloneItem(activeStock);
   }
-  const nextStock = nextStockForStatus(stock, status, dateKey);
+  const timestamp = nowIso();
+  const nextStock = nextStockForStatus(stock, status, dateKey, timestamp);
+  const stocks = store.stocks.map((item) => (item.id === id ? nextStock : item));
   writeStoreAndScheduleCloudSync({
     ...store,
-    stocks: store.stocks.map((item) => (item.id === id ? nextStock : item))
+    stocks: stock.status === "stocked" && status === "active"
+      ? finishPreviousActiveStocks(stocks, nextStock, dateKey, timestamp)
+      : stocks
   });
   return cloneItem(nextStock);
 }
