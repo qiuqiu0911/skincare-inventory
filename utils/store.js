@@ -374,15 +374,20 @@ function findOrCreateCategoryInStore(store, name) {
 
 function findOrCreateProduct(store, input) {
   const name = trim(input.name);
-  const categoryName = trim(input.categoryName) || "未分类";
   if (!name) {
     throw new Error("产品名称不能为空");
   }
-  const categoryResult = findOrCreateCategoryInStore(store, categoryName);
-  const existing = categoryResult.store.products.find((product) => product.name === name && product.categoryId === categoryResult.category.id);
-  if (existing) {
-    return { store: categoryResult.store, product: existing, category: categoryResult.category };
+  const existingByName = store.products.find((product) => product.name === name);
+  if (existingByName) {
+    const existingCategory = store.categories.find((category) => category.id === existingByName.categoryId);
+    return {
+      store,
+      product: existingByName,
+      category: existingCategory || { id: existingByName.categoryId, name: "未分类" }
+    };
   }
+  const categoryName = trim(input.categoryName) || "未分类";
+  const categoryResult = findOrCreateCategoryInStore(store, categoryName);
   const product = {
     id: createId("prod"),
     name,
@@ -672,6 +677,170 @@ function listStocks(status) {
   return stocks.filter((stock) => stock.status === status).map(cloneItem);
 }
 
+function listProducts() {
+  const store = ensureSeedData();
+  const categoryById = new Map(store.categories.map((category) => [category.id, category]));
+  const recordCountByProductId = store.records.reduce((summary, record) => {
+    summary.set(record.productId, (summary.get(record.productId) || 0) + 1);
+    return summary;
+  }, new Map());
+  const stockCountByProductId = store.stocks.reduce((summary, stock) => {
+    summary.set(stock.productId, (summary.get(stock.productId) || 0) + stock.quantity);
+    return summary;
+  }, new Map());
+  return store.products
+    .map((product) => {
+      const category = categoryById.get(product.categoryId) || { name: "未分类", sortOrder: Number.MAX_SAFE_INTEGER };
+      return {
+        ...cloneItem(product),
+        categoryName: category.name,
+        categorySortOrder: category.sortOrder,
+        recordCount: recordCountByProductId.get(product.id) || 0,
+        stockCount: stockCountByProductId.get(product.id) || 0
+      };
+    })
+    .sort((left, right) => (
+      left.categorySortOrder - right.categorySortOrder
+        || left.name.localeCompare(right.name, "zh-CN")
+        || left.id.localeCompare(right.id)
+    ));
+}
+
+function listProductCategoryConflicts() {
+  const products = listProducts();
+  const grouped = products.reduce((summary, product) => {
+    const items = summary.get(product.name) || [];
+    items.push(product);
+    summary.set(product.name, items);
+    return summary;
+  }, new Map());
+  return Array.from(grouped.entries())
+    .map(([name, items]) => {
+      const categoryNames = Array.from(new Set(items.map((item) => item.categoryName)));
+      return {
+        name,
+        categoryNames,
+        productIds: items.map((item) => item.id),
+        recordCount: items.reduce((count, item) => count + item.recordCount, 0),
+        stockCount: items.reduce((count, item) => count + item.stockCount, 0)
+      };
+    })
+    .filter((item) => item.categoryNames.length > 1)
+    .sort((left, right) => left.name.localeCompare(right.name, "zh-CN"));
+}
+
+function updateProductCategory(id, categoryName) {
+  const store = ensureSeedData();
+  const product = store.products.find((item) => item.id === id);
+  if (!product) {
+    throw new Error("产品不存在");
+  }
+  const targetCategoryName = trim(categoryName);
+  const category = store.categories.find((item) => item.name === targetCategoryName);
+  if (!category) {
+    throw new Error("分类不存在");
+  }
+  if (product.categoryId === category.id) {
+    return cloneItem({
+      ...product,
+      categoryName: category.name
+    });
+  }
+  const timestamp = nowIso();
+  const duplicate = store.products.find((item) => (
+    item.id !== id
+      && item.name === product.name
+      && item.categoryId === category.id
+  ));
+  const nextProductId = duplicate ? duplicate.id : id;
+  const products = duplicate
+    ? store.products.filter((item) => item.id !== id)
+    : store.products.map((item) => (item.id === id
+      ? { ...item, categoryId: category.id, updatedAt: timestamp }
+      : item
+    ));
+  writeStoreAndScheduleCloudSync({
+    ...store,
+    products,
+    records: store.records.map((record) => (record.productId === id
+      ? {
+        ...record,
+        productId: nextProductId,
+        categoryNameSnapshot: category.name,
+        updatedAt: timestamp
+      }
+      : record
+    )),
+    stocks: store.stocks.map((stock) => (stock.productId === id
+      ? {
+        ...stock,
+        productId: nextProductId,
+        categoryNameSnapshot: category.name,
+        updatedAt: timestamp
+      }
+      : stock
+    ))
+  });
+  return cloneItem({
+    ...(duplicate || { ...product, categoryId: category.id, updatedAt: timestamp }),
+    categoryName: category.name
+  });
+}
+
+function resolveProductCategory(name, categoryName) {
+  const productName = trim(name);
+  const targetCategoryName = trim(categoryName);
+  if (!productName) {
+    throw new Error("产品名称不能为空");
+  }
+  const store = ensureSeedData();
+  const category = store.categories.find((item) => item.name === targetCategoryName);
+  if (!category) {
+    throw new Error("分类不存在");
+  }
+  const sameNameProducts = store.products.filter((product) => product.name === productName);
+  if (!sameNameProducts.length) {
+    throw new Error("产品不存在");
+  }
+  const timestamp = nowIso();
+  const canonicalProduct = sameNameProducts.find((product) => product.categoryId === category.id) || sameNameProducts[0];
+  const sameNameProductIds = new Set(sameNameProducts.map((product) => product.id));
+  const products = store.products
+    .filter((product) => !sameNameProductIds.has(product.id) || product.id === canonicalProduct.id)
+    .map((product) => (product.id === canonicalProduct.id
+      ? { ...product, categoryId: category.id, updatedAt: timestamp }
+      : product
+    ));
+  writeStoreAndScheduleCloudSync({
+    ...store,
+    products,
+    records: store.records.map((record) => (sameNameProductIds.has(record.productId) || record.productNameSnapshot === productName
+      ? {
+        ...record,
+        productId: canonicalProduct.id,
+        categoryNameSnapshot: category.name,
+        updatedAt: timestamp
+      }
+      : record
+    )),
+    stocks: store.stocks.map((stock) => (sameNameProductIds.has(stock.productId) || stock.productNameSnapshot === productName
+      ? {
+        ...stock,
+        productId: canonicalProduct.id,
+        categoryNameSnapshot: category.name,
+        updatedAt: timestamp
+      }
+      : stock
+    ))
+  });
+  return cloneItem({
+    ...canonicalProduct,
+    categoryId: category.id,
+    categoryName: category.name,
+    updatedAt: timestamp
+  });
+}
+
 function productOptions(categoryName = "") {
   const store = ensureSeedData();
   const categoryById = new Map(store.categories.map((category) => [category.id, category.name]));
@@ -902,14 +1071,18 @@ module.exports = {
   importStoreSnapshot,
   initCloudSync,
   listCategories,
+  listProductCategoryConflicts,
+  listProducts,
   listStocks,
   listTodayRecords,
   productOptions,
   refreshFromCloud,
   reorderUsageRecords,
+  resolveProductCategory,
   resetStoreForTests,
   threeDayStats,
   todayKey,
+  updateProductCategory,
   updateStock,
   updateStockStatus,
   updateUsageRecord,

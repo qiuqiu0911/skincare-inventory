@@ -402,7 +402,13 @@
 }
 
 .product-option-list {
-  height: 360rpx;
+  height: 260rpx;
+  max-height: 28vh;
+}
+
+.product-option-list-compact {
+  height: auto;
+  max-height: none;
 }
 
 .product-option {

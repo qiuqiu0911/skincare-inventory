@@ -225,6 +225,123 @@ function testProductOptionsSortsAndFiltersByCategory() {
   assert.deepEqual(store.productOptions("洁面"), ["氨基酸洁面"]);
 }
 
+function testExistingProductNameKeepsSingleCategory() {
+  reset();
+  store.addUsageRecord({
+    name: "芙清凉茶次抛",
+    categoryName: "精华",
+    date: "2026-06-07"
+  });
+  store.addUsageRecord({
+    name: "芙清凉茶次抛",
+    categoryName: "洁面",
+    date: "2026-06-08"
+  });
+
+  const products = store.listProducts().filter((product) => product.name === "芙清凉茶次抛");
+  assert.equal(products.length, 1);
+  assert.equal(products[0].categoryName, "精华");
+  assert.deepEqual(
+    store.listTodayRecords("2026-06-08").map((record) => record.categoryNameSnapshot),
+    ["精华"]
+  );
+}
+
+function testUpdateProductCategoryMergesDuplicateProducts() {
+  reset();
+  store.importStoreSnapshot({
+    data: {
+      categories: [
+        { id: "cat_cleanser", name: "洁面", sortOrder: 0 },
+        { id: "cat_serum", name: "精华", sortOrder: 1 }
+      ],
+      products: [
+        { id: "prod_serum", name: "芙清凉茶次抛", categoryId: "cat_serum" },
+        { id: "prod_cleanser", name: "芙清凉茶次抛", categoryId: "cat_cleanser" }
+      ],
+      stocks: [
+        {
+          id: "stock_cleanser",
+          productId: "prod_cleanser",
+          productNameSnapshot: "芙清凉茶次抛",
+          categoryNameSnapshot: "洁面",
+          status: "stocked",
+          quantity: 1
+        }
+      ],
+      records: [
+        {
+          id: "usage_cleanser",
+          date: "2026-06-15",
+          timeOfDay: "morning",
+          productId: "prod_cleanser",
+          productNameSnapshot: "芙清凉茶次抛",
+          categoryNameSnapshot: "洁面",
+          createdAt: "2026-06-15T08:00:00.000Z",
+          updatedAt: "2026-06-15T08:00:00.000Z"
+        }
+      ]
+    }
+  });
+
+  store.updateProductCategory("prod_cleanser", "精华");
+
+  const products = store.listProducts().filter((product) => product.name === "芙清凉茶次抛");
+  assert.equal(products.length, 1);
+  assert.equal(products[0].id, "prod_serum");
+  assert.equal(store.listTodayRecords("2026-06-15")[0].productId, "prod_serum");
+  assert.equal(store.listTodayRecords("2026-06-15")[0].categoryNameSnapshot, "精华");
+  assert.equal(store.listStocks("stocked")[0].productId, "prod_serum");
+  assert.equal(store.listStocks("stocked")[0].categoryNameSnapshot, "精华");
+}
+
+function testResolveProductCategoryListsAndFixesConflicts() {
+  reset();
+  store.importStoreSnapshot({
+    data: {
+      categories: [
+        { id: "cat_cleanser", name: "洁面", sortOrder: 0 },
+        { id: "cat_serum", name: "精华", sortOrder: 1 }
+      ],
+      products: [
+        { id: "prod_serum", name: "芙清凉茶次抛", categoryId: "cat_serum" },
+        { id: "prod_cleanser", name: "芙清凉茶次抛", categoryId: "cat_cleanser" }
+      ],
+      stocks: [],
+      records: [
+        {
+          id: "usage_serum",
+          date: "2026-06-07",
+          timeOfDay: "evening",
+          productId: "prod_serum",
+          productNameSnapshot: "芙清凉茶次抛",
+          categoryNameSnapshot: "精华",
+          createdAt: "2026-06-07T08:00:00.000Z",
+          updatedAt: "2026-06-07T08:00:00.000Z"
+        },
+        {
+          id: "usage_cleanser",
+          date: "2026-06-15",
+          timeOfDay: "morning",
+          productId: "prod_cleanser",
+          productNameSnapshot: "芙清凉茶次抛",
+          categoryNameSnapshot: "洁面",
+          createdAt: "2026-06-15T08:00:00.000Z",
+          updatedAt: "2026-06-15T08:00:00.000Z"
+        }
+      ]
+    }
+  });
+
+  assert.deepEqual(store.listProductCategoryConflicts().map((item) => item.name), ["芙清凉茶次抛"]);
+
+  store.resolveProductCategory("芙清凉茶次抛", "精华");
+
+  assert.equal(store.listProductCategoryConflicts().length, 0);
+  assert.equal(store.listProducts().filter((product) => product.name === "芙清凉茶次抛").length, 1);
+  assert.equal(store.listTodayRecords("2026-06-15")[0].categoryNameSnapshot, "精华");
+}
+
 function testUpdateStockKeepsLifecycleState() {
   reset();
   const stock = store.addStock({
@@ -480,6 +597,9 @@ testUpdateUsageRecordKeepsRecordIdentity();
 testListTodayRecordsSortsByCreatedAt();
 testReorderUsageRecordsPersistsDisplayOrder();
 testProductOptionsSortsAndFiltersByCategory();
+testExistingProductNameKeepsSingleCategory();
+testUpdateProductCategoryMergesDuplicateProducts();
+testResolveProductCategoryListsAndFixesConflicts();
 testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
 testWeeklyUsageMatrixTracksMorningAndEvening();

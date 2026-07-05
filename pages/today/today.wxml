@@ -55,7 +55,7 @@
   </view>
 
   <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>
-  <view class="bottom-sheet" wx:if="{{showForm}}" role="dialog" aria-modal="true" aria-labelledby="today-sheet-title" catchtouchmove="noop">
+  <view class="bottom-sheet" wx:if="{{showForm}}" role="dialog" aria-modal="true" aria-labelledby="today-sheet-title">
     <view class="sheet-head">
       <view class="sheet-title" id="today-sheet-title">{{editingId ? '编辑护肤记录' : '添加护肤记录'}}</view>
       <button class="close-button" hover-class="button-hover" aria-label="关闭" bindtap="closeForm">×</button>
@@ -107,7 +107,7 @@
         <view class="product-selector-close" role="button" aria-label="关闭历史产品选择" hover-class="tap-hover" bindtap="closeProductSelector">×</view>
       </view>
       <input class="product-search-input" placeholder="搜索产品名称" value="{{productSearchKeyword}}" bindinput="onProductSearchInput" />
-      <scroll-view scroll-y class="product-option-list">
+      <scroll-view scroll-y class="product-option-list {{filteredProductOptions.length <= 3 ? 'product-option-list-compact' : ''}}">
         <view wx:for="{{filteredProductOptions}}" wx:key="*this" class="product-option" role="button" hover-class="tap-hover" data-name="{{item}}" bindtap="selectProduct">{{item}}</view>
         <view wx:if="{{!filteredProductOptions.length}}" class="product-option-empty">没有匹配的历史产品</view>
       </scroll-view>

@@ -28,8 +28,15 @@ function backupFileName() {
 Page({
   data: {
     categories: [],
+    categoryNames: [],
     categoryName: "",
     categoryError: "",
+    products: [],
+    productConflicts: [],
+    productManagerCategoryName: "",
+    productManagerProducts: [],
+    productManagerTitle: "",
+    showProductManager: false,
     submitting: false,
     deletingCategoryId: "",
     swipedCategoryId: "",
@@ -57,14 +64,37 @@ Page({
 
   refresh() {
     try {
+      const categories = store.listCategories();
+      const categoryNames = categories.map((category) => category.name);
+      const products = store.listProducts();
+      const productConflicts = store.listProductCategoryConflicts().map((conflict) => ({
+        ...conflict,
+        categoryText: conflict.categoryNames.join(" / "),
+        categoryIndex: Math.max(0, categoryNames.indexOf(conflict.categoryNames[0]))
+      }));
+      const productManagerProducts = this.data.productManagerCategoryName
+        ? products
+          .filter((product) => product.categoryName === this.data.productManagerCategoryName)
+          .map((product) => ({
+            ...product,
+            categoryIndex: Math.max(0, categoryNames.indexOf(product.categoryName))
+          }))
+        : [];
       this.setData({
-        categories: store.listCategories().map((category) => ({
+        categories: categories.map((category) => ({
           ...category,
           swiped: category.id === this.data.swipedCategoryId
-        }))
+        })),
+        categoryNames,
+        products,
+        productConflicts,
+        productManagerProducts,
+        productManagerTitle: this.data.productManagerCategoryName
+          ? `${this.data.productManagerCategoryName}产品`
+          : "产品分类"
       });
     } catch (error) {
-      this.setData({ categories: [] });
+      this.setData({ categories: [], categoryNames: [], products: [], productConflicts: [], productManagerProducts: [] });
       wx.showToast({ title: error.message, icon: "none" });
     }
   },
@@ -111,6 +141,26 @@ Page({
     this.setData({ swipedCategoryId: "" });
     this.refresh();
   },
+
+  openProductManager(event) {
+    const categoryName = event.currentTarget.dataset.name;
+    this.setData({
+      productManagerCategoryName: categoryName,
+      showProductManager: true,
+      swipedCategoryId: ""
+    });
+    this.refresh();
+  },
+
+  closeProductManager() {
+    this.setData({
+      productManagerCategoryName: "",
+      productManagerProducts: [],
+      showProductManager: false
+    });
+  },
+
+  noop() {},
 
   onCategoryInput(event) {
     const categoryName = event.detail.value;
@@ -189,6 +239,60 @@ Page({
     });
   },
 
+  onProductCategoryPick(event) {
+    const id = event.currentTarget.dataset.id;
+    const productName = event.currentTarget.dataset.name;
+    const categoryName = this.data.categoryNames[Number(event.detail.value)];
+    const product = this.data.products.find((item) => item.id === id);
+    if (!id || !categoryName || !product || product.categoryName === categoryName) {
+      return;
+    }
+    wx.showModal({
+      title: "调整产品分类？",
+      content: `将“${productName}”归到“${categoryName}”，并同步更新关联记录和库存。`,
+      confirmText: "调整",
+      confirmColor: "#111827",
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+        try {
+          store.updateProductCategory(id, categoryName);
+          this.refresh();
+          wx.showToast({ title: "已调整分类", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message || "调整失败", icon: "none" });
+        }
+      }
+    });
+  },
+
+  onConflictCategoryPick(event) {
+    const productName = event.currentTarget.dataset.name;
+    const categoryName = this.data.categoryNames[Number(event.detail.value)];
+    if (!productName || !categoryName) {
+      return;
+    }
+    wx.showModal({
+      title: "选择唯一分类？",
+      content: `将“${productName}”统一归到“${categoryName}”，并同步更新历史记录和库存。`,
+      confirmText: "统一",
+      confirmColor: "#111827",
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+        try {
+          store.resolveProductCategory(productName, categoryName);
+          this.refresh();
+          wx.showToast({ title: "已统一分类", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message || "处理失败", icon: "none" });
+        }
+      }
+    });
+  },
+
   exportData() {
     try {
       const filePath = `${wx.env.USER_DATA_PATH}/${backupFileName()}`;
@@ -232,18 +336,38 @@ Page({
           wx.showToast({ title: "未选择文件", icon: "none" });
           return;
         }
-        wx.showModal({
-          title: "导入并覆盖当前数据？",
-          content: "导入后会替换当前本机记录、库存和分类。建议先导出当前数据备份。",
-          confirmText: "确认导入",
-          confirmColor: "#111827",
-          success: (modalResult) => {
-            if (!modalResult.confirm) {
-              return;
-            }
-            this.readAndImportFile(file.path);
-          }
-        });
+        this.confirmImport(() => this.readAndImportFile(file.path));
+      }
+    });
+  },
+
+  importClipboardData() {
+    wx.getClipboardData({
+      success: (result) => {
+        const content = trim(result.data);
+        if (!content) {
+          wx.showToast({ title: "剪贴板没有 JSON", icon: "none" });
+          return;
+        }
+        this.confirmImport(() => this.importSnapshotContent(content));
+      },
+      fail: () => {
+        wx.showToast({ title: "读取剪贴板失败", icon: "none" });
+      }
+    });
+  },
+
+  confirmImport(onConfirm) {
+    wx.showModal({
+      title: "导入并覆盖当前数据？",
+      content: "导入后会替换当前本机记录、库存和分类。建议先导出当前数据备份。",
+      confirmText: "确认导入",
+      confirmColor: "#111827",
+      success: (modalResult) => {
+        if (!modalResult.confirm) {
+          return;
+        }
+        onConfirm();
       }
     });
   },
@@ -251,6 +375,14 @@ Page({
   readAndImportFile(filePath) {
     try {
       const fileContent = wx.getFileSystemManager().readFileSync(filePath, "utf8");
+      this.importSnapshotContent(fileContent);
+    } catch (error) {
+      wx.showToast({ title: error.message || "导入失败", icon: "none" });
+    }
+  },
+
+  importSnapshotContent(fileContent) {
+    try {
       store.importStoreSnapshot(fileContent);
       this.setData({ categoryName: "", categoryError: "", canSubmit: false });
       this.refresh();

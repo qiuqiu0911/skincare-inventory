@@ -26,18 +26,23 @@
       <view class="section-count">{{categories.length}} 个</view>
     </view>
     <view class="category-list">
-      <view class="category-swipe-item" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" bindtouchstart="onCategoryTouchStart" bindtouchend="onCategoryTouchEnd">
-        <view class="category-swipe-actions {{item.swiped ? 'category-swipe-actions-active' : ''}}">
-          <view class="category-delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" role="button" hover-class="tap-hover" aria-label="删除分类 {{item.name}}" aria-disabled="{{deletingCategoryId === item.id}}" data-id="{{item.id}}" data-name="{{item.name}}" catchtap="deleteCategory">
-            <image class="category-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" alt="" />
+      <view class="category-group" wx:for="{{categories}}" wx:key="id">
+        <view class="category-swipe-item" data-id="{{item.id}}" bindtouchstart="onCategoryTouchStart" bindtouchend="onCategoryTouchEnd">
+          <view class="category-swipe-actions {{item.swiped ? 'category-swipe-actions-active' : ''}}">
+            <view class="category-manage-button" role="button" hover-class="tap-hover" aria-label="维护 {{item.name}} 产品分类" data-name="{{item.name}}" catchtap="openProductManager">
+              <image class="category-action-icon" src="/assets/icons/product-category.svg" mode="aspectFit" alt="" />
+            </view>
+            <view class="category-delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" role="button" hover-class="tap-hover" aria-label="删除分类 {{item.name}}" aria-disabled="{{deletingCategoryId === item.id}}" data-id="{{item.id}}" data-name="{{item.name}}" catchtap="deleteCategory">
+              <image class="category-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" alt="" />
+            </view>
           </view>
-        </view>
-        <view class="category-row {{item.swiped ? 'category-row-open' : ''}}" bindtap="closeCategorySwipe">
-          <view class="category-left">
-            <image class="tag-icon" src="/assets/icons/category-tag.png" mode="aspectFit" alt="" />
-            <text class="category-name">{{item.name}}</text>
+          <view class="category-row {{item.swiped ? 'category-row-open' : ''}}" bindtap="closeCategorySwipe">
+            <view class="category-left">
+              <image class="tag-icon" src="/assets/icons/category-tag.png" mode="aspectFit" alt="" />
+              <text class="category-name">{{item.name}}</text>
+            </view>
+            <view class="category-hint">左滑管理</view>
           </view>
-          <view class="category-hint">左滑管理</view>
         </view>
       </view>
     </view>
@@ -48,6 +53,46 @@
   </view>
 
   <view class="my-tip">提示:仅可删除未被任何护肤记录或库存使用的分类,且至少需要保留一个分类。</view>
+
+  <view class="sheet-mask" wx:if="{{showProductManager}}" bindtap="closeProductManager"></view>
+  <view class="bottom-sheet product-manager-sheet" wx:if="{{showProductManager}}" role="dialog" aria-modal="true" catchtouchmove="noop">
+    <view class="sheet-head">
+      <view class="sheet-title">{{productManagerTitle}}</view>
+      <button class="close-button" hover-class="button-hover" aria-label="关闭" bindtap="closeProductManager">×</button>
+    </view>
+
+    <view class="conflict-panel" wx:if="{{productConflicts.length}}">
+      <view class="conflict-title">分类冲突</view>
+      <view class="conflict-row" wx:for="{{productConflicts}}" wx:key="name">
+        <view class="product-info">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-meta">{{item.categoryText}} · 记录 {{item.recordCount}} · 库存 {{item.stockCount}}</view>
+        </view>
+        <picker class="picker-bare product-category-control" range="{{categoryNames}}" value="{{item.categoryIndex}}" data-name="{{item.name}}" bindchange="onConflictCategoryPick">
+          <view class="product-category-picker product-category-picker-warning" role="button" hover-class="tap-hover" aria-label="统一 {{item.name}} 分类">
+            <text>选分类</text>
+            <text class="picker-chevron">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="category-products" wx:if="{{productManagerProducts.length}}">
+      <view class="category-product-row" wx:for="{{productManagerProducts}}" wx:key="id">
+        <view class="product-info">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-meta">记录 {{item.recordCount}} · 库存 {{item.stockCount}}</view>
+        </view>
+        <picker class="picker-bare product-category-control" range="{{categoryNames}}" value="{{item.categoryIndex}}" data-id="{{item.id}}" data-name="{{item.name}}" bindchange="onProductCategoryPick">
+          <view class="product-category-picker" role="button" hover-class="tap-hover" aria-label="调整 {{item.name}} 分类">
+            <text>{{item.categoryName}}</text>
+            <text class="picker-chevron">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    <view class="product-empty" wx:else>这个分类下还没有产品</view>
+  </view>
 
   <view class="data-note card card-soft">
     <view class="item-title">数据保存在本机</view>
@@ -60,6 +105,7 @@
     <view class="backup-actions">
       <view class="backup-button backup-button-primary" role="button" hover-class="button-hover" aria-label="导出数据" bindtap="exportData">导出数据</view>
       <view class="backup-button" role="button" hover-class="button-hover" aria-label="导入数据(将覆盖本机数据)" bindtap="importData">导入数据</view>
+      <view class="backup-button" role="button" hover-class="button-hover" aria-label="从剪贴板导入数据(将覆盖本机数据)" bindtap="importClipboardData">剪贴板导入</view>
     </view>
   </view>
 </view>
