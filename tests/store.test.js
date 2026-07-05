@@ -186,6 +186,45 @@ function testReorderUsageRecordsPersistsDisplayOrder() {
   assert.equal(store.listTodayRecords("2026-06-07").find((record) => record.id === evening.id).productNameSnapshot, "晚霜");
 }
 
+function testProductOptionsSortsAndFiltersByCategory() {
+  reset();
+  store.importStoreSnapshot({
+    data: {
+      categories: [
+        { id: "cat_cleanser", name: "洁面", sortOrder: 0 },
+        { id: "cat_serum", name: "精华", sortOrder: 1 }
+      ],
+      products: [
+        { id: "prod_cleanser", name: "氨基酸洁面", categoryId: "cat_cleanser" },
+        { id: "prod_serum", name: "B5 精华", categoryId: "cat_serum" }
+      ],
+      stocks: [
+        {
+          id: "stock_serum",
+          productNameSnapshot: "A 醇精华",
+          categoryNameSnapshot: "精华",
+          status: "active",
+          quantity: 1
+        }
+      ],
+      records: [
+        {
+          id: "usage_serum",
+          date: "2026-06-07",
+          timeOfDay: "morning",
+          productNameSnapshot: "C 光精华",
+          categoryNameSnapshot: "精华",
+          createdAt: "2026-06-07T08:00:00.000Z",
+          updatedAt: "2026-06-07T08:00:00.000Z"
+        }
+      ]
+    }
+  });
+
+  assert.deepEqual(store.productOptions("精华"), ["A 醇精华", "B5 精华", "C 光精华"]);
+  assert.deepEqual(store.productOptions("洁面"), ["氨基酸洁面"]);
+}
+
 function testUpdateStockKeepsLifecycleState() {
   reset();
   const stock = store.addStock({
@@ -440,6 +479,7 @@ testDeleteStockedItem();
 testUpdateUsageRecordKeepsRecordIdentity();
 testListTodayRecordsSortsByCreatedAt();
 testReorderUsageRecordsPersistsDisplayOrder();
+testProductOptionsSortsAndFiltersByCategory();
 testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
 testWeeklyUsageMatrixTracksMorningAndEvening();

@@ -672,12 +672,28 @@ function listStocks(status) {
   return stocks.filter((stock) => stock.status === status).map(cloneItem);
 }
 
-function productOptions() {
+function productOptions(categoryName = "") {
   const store = ensureSeedData();
-  const names = new Set(store.products.map((product) => product.name));
-  store.records.forEach((record) => names.add(record.productNameSnapshot));
-  store.stocks.forEach((stock) => names.add(stock.productNameSnapshot));
-  return Array.from(names).filter(Boolean).sort();
+  const categoryById = new Map(store.categories.map((category) => [category.id, category.name]));
+  const targetCategoryName = trim(categoryName);
+  const isTargetCategory = (name) => !targetCategoryName || name === targetCategoryName;
+  const names = new Set();
+  store.products.forEach((product) => {
+    if (isTargetCategory(categoryById.get(product.categoryId))) {
+      names.add(product.name);
+    }
+  });
+  store.records.forEach((record) => {
+    if (isTargetCategory(record.categoryNameSnapshot)) {
+      names.add(record.productNameSnapshot);
+    }
+  });
+  store.stocks.forEach((stock) => {
+    if (isTargetCategory(stock.categoryNameSnapshot)) {
+      names.add(stock.productNameSnapshot);
+    }
+  });
+  return Array.from(names).filter(Boolean).sort((left, right) => left.localeCompare(right, "zh-CN"));
 }
 
 function threeDayStats(baseDateKey = todayKey()) {

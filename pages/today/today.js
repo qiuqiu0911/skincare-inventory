@@ -210,10 +210,13 @@ Page({
   },
 
   setForm(nextForm, nextErrors = this.data.formErrors) {
+    const productOptions = store.productOptions(nextForm.categoryName);
     this.setData({
       form: nextForm,
       formErrors: nextErrors,
       categoryIndex: Math.max(0, this.data.categories.indexOf(nextForm.categoryName)),
+      productOptions,
+      filteredProductOptions: filterProductOptions(productOptions, this.data.productSearchKeyword),
       canSubmit: canSubmitRecord(nextForm, this.data.submitting)
     });
   },
@@ -227,7 +230,7 @@ Page({
         ...this.data.form,
         categoryName
       };
-      const productOptions = store.productOptions();
+      const productOptions = store.productOptions(categoryName);
       const records = store.listTodayRecords(viewDate);
       this.setData({
         viewDate,
@@ -622,9 +625,10 @@ Page({
 
   onCategoryPick(event) {
     const index = Number(event.detail.value);
+    const categoryName = this.data.categories[index];
     this.setForm({
       ...this.data.form,
-      categoryName: this.data.categories[index]
+      categoryName
     }, {
       ...this.data.formErrors,
       categoryName: ""
