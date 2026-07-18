@@ -1,0 +1,298 @@
+const store = require("../../utils/store");
+const cloudConfig = require("../../utils/cloudConfig");
+
+function trim(value) {
+  return String(value || "").trim();
+}
+
+function validateCategoryName(value) {
+  if (!trim(value)) {
+    return "请填写分类名称";
+  }
+  if (trim(value).length > 12) {
+    return "分类名称请控制在 12 字以内";
+  }
+  return "";
+}
+
+function hasCategory(categories, name) {
+  const categoryName = trim(name);
+  return categories.some((category) => category.name === categoryName);
+}
+
+Page({
+  data: {
+    categories: [],
+    categoryNames: [],
+    categoryName: "",
+    categoryError: "",
+    products: [],
+    productConflicts: [],
+    productManagerCategoryName: "",
+    productManagerProducts: [],
+    productManagerTitle: "",
+    showProductManager: false,
+    submitting: false,
+    deletingCategoryId: "",
+    swipedCategoryId: "",
+    canSubmit: false
+  },
+
+  onShow() {
+    this.refresh();
+    this.syncFromCloud();
+  },
+
+  syncFromCloud() {
+    if (!cloudConfig.enabled) {
+      return;
+    }
+    store.flushCloudSync()
+      .then(() => store.refreshFromCloud())
+      .then((result) => {
+        if (result && result.updated) {
+          this.refresh();
+        }
+      })
+      .catch(() => {});
+  },
+
+  refresh() {
+    try {
+      const categories = store.listCategories();
+      const categoryNames = categories.map((category) => category.name);
+      const products = store.listProducts();
+      const productConflicts = store.listProductCategoryConflicts().map((conflict) => ({
+        ...conflict,
+        categoryText: conflict.categoryNames.join(" / "),
+        categoryIndex: Math.max(0, categoryNames.indexOf(conflict.categoryNames[0]))
+      }));
+      const productManagerProducts = this.data.productManagerCategoryName
+        ? products
+          .filter((product) => product.categoryName === this.data.productManagerCategoryName)
+          .map((product) => ({
+            ...product,
+            categoryIndex: Math.max(0, categoryNames.indexOf(product.categoryName))
+          }))
+        : [];
+      this.setData({
+        categories: categories.map((category) => ({
+          ...category,
+          swiped: category.id === this.data.swipedCategoryId
+        })),
+        categoryNames,
+        products,
+        productConflicts,
+        productManagerProducts,
+        productManagerTitle: this.data.productManagerCategoryName
+          ? `${this.data.productManagerCategoryName}产品`
+          : "产品分类"
+      });
+    } catch (error) {
+      this.setData({
+        categories: [],
+        categoryNames: [],
+        products: [],
+        productConflicts: [],
+        productManagerProducts: []
+      });
+      wx.showToast({ title: error.message, icon: "none" });
+    }
+  },
+
+  onCategoryTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) {
+      return;
+    }
+    this.categoryTouchStartX = touch.clientX;
+    this.categoryTouchStartY = touch.clientY;
+  },
+
+  onCategoryTouchEnd(event) {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch || this.categoryTouchStartX === undefined) {
+      return;
+    }
+    const deltaX = touch.clientX - this.categoryTouchStartX;
+    const deltaY = touch.clientY - this.categoryTouchStartY;
+    const id = event.currentTarget.dataset.id;
+
+    this.categoryTouchStartX = undefined;
+    this.categoryTouchStartY = undefined;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+    if (deltaX < -45) {
+      this.setData({ swipedCategoryId: id });
+      this.refresh();
+      return;
+    }
+    if (deltaX > 30 || this.data.swipedCategoryId) {
+      this.setData({ swipedCategoryId: "" });
+      this.refresh();
+    }
+  },
+
+  closeCategorySwipe() {
+    if (!this.data.swipedCategoryId) {
+      return;
+    }
+    this.setData({ swipedCategoryId: "" });
+    this.refresh();
+  },
+
+  openProductManager(event) {
+    const categoryName = event.currentTarget.dataset.name;
+    this.setData({
+      productManagerCategoryName: categoryName,
+      showProductManager: true,
+      swipedCategoryId: ""
+    });
+    this.refresh();
+  },
+
+  closeProductManager() {
+    this.setData({
+      productManagerCategoryName: "",
+      productManagerProducts: [],
+      showProductManager: false
+    });
+  },
+
+  noop() {},
+
+  onCategoryInput(event) {
+    const categoryName = event.detail.value;
+    const validationMessage = validateCategoryName(categoryName)
+      || (hasCategory(this.data.categories, categoryName) ? "该分类已存在" : "");
+    const categoryError = this.data.categoryError ? validationMessage : "";
+    this.setData({
+      categoryName,
+      categoryError,
+      canSubmit: !this.data.submitting && !validationMessage
+    });
+  },
+
+  clearCategoryName() {
+    this.setData({
+      categoryName: "",
+      categoryError: "",
+      canSubmit: false
+    });
+  },
+
+  addCategory() {
+    if (this.data.submitting || !this.data.canSubmit) {
+      return;
+    }
+    const categoryError = validateCategoryName(this.data.categoryName)
+      || (hasCategory(this.data.categories, this.data.categoryName) ? "该分类已存在" : "");
+    if (categoryError) {
+      this.setData({ categoryError, canSubmit: false });
+      wx.showToast({ title: categoryError, icon: "none" });
+      return;
+    }
+
+    this.setData({ submitting: true, canSubmit: false });
+    try {
+      store.addCategory(this.data.categoryName);
+      this.setData({ categoryName: "", categoryError: "" });
+      this.refresh();
+      wx.showToast({ title: "已保存分类", icon: "success" });
+    } catch (error) {
+      wx.showToast({ title: error.message, icon: "none" });
+    } finally {
+      const categoryError = validateCategoryName(this.data.categoryName);
+      this.setData({
+        submitting: false,
+        canSubmit: !categoryError
+      });
+    }
+  },
+
+  deleteCategory(event) {
+    if (this.data.deletingCategoryId) {
+      return;
+    }
+    const id = event.currentTarget.dataset.id;
+    const name = event.currentTarget.dataset.name;
+    wx.showModal({
+      title: "删除这个分类？",
+      content: `仅未被产品使用的空分类可删除。确认删除“${name}”？`,
+      confirmText: "删除",
+      confirmColor: "#FF3B30",
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+        this.setData({ deletingCategoryId: id });
+        try {
+          store.deleteCategory(id);
+          this.setData({ swipedCategoryId: "" });
+          this.refresh();
+          wx.showToast({ title: "已删除分类", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message, icon: "none" });
+        } finally {
+          this.setData({ deletingCategoryId: "" });
+        }
+      }
+    });
+  },
+
+  onProductCategoryPick(event) {
+    const id = event.currentTarget.dataset.id;
+    const productName = event.currentTarget.dataset.name;
+    const categoryName = this.data.categoryNames[Number(event.detail.value)];
+    const product = this.data.products.find((item) => item.id === id);
+    if (!id || !categoryName || !product || product.categoryName === categoryName) {
+      return;
+    }
+    wx.showModal({
+      title: "调整产品分类？",
+      content: `将“${productName}”归到“${categoryName}”，并同步更新关联记录和库存。`,
+      confirmText: "调整",
+      confirmColor: "#111827",
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+        try {
+          store.updateProductCategory(id, categoryName);
+          this.refresh();
+          wx.showToast({ title: "已调整分类", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message || "调整失败", icon: "none" });
+        }
+      }
+    });
+  },
+
+  onConflictCategoryPick(event) {
+    const productName = event.currentTarget.dataset.name;
+    const categoryName = this.data.categoryNames[Number(event.detail.value)];
+    if (!productName || !categoryName) {
+      return;
+    }
+    wx.showModal({
+      title: "选择唯一分类？",
+      content: `将“${productName}”统一归到“${categoryName}”，并同步更新历史记录和库存。`,
+      confirmText: "统一",
+      confirmColor: "#111827",
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+        try {
+          store.resolveProductCategory(productName, categoryName);
+          this.refresh();
+          wx.showToast({ title: "已统一分类", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message || "处理失败", icon: "none" });
+        }
+      }
+    });
+  }
+});

@@ -525,7 +525,7 @@ Page({
 
   goTemplateManager() {
     this.closeTemplateSheet();
-    wx.switchTab({ url: "/pages/settings/settings" });
+    wx.navigateTo({ url: "/pages/templates/templates" });
   },
 
   noop() {},

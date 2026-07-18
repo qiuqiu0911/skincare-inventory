@@ -2,293 +2,49 @@
   <view class="page-head">
     <view>
       <view class="page-title">我的</view>
-      <view class="page-subtitle">管理模板、分类和本机数据</view>
+      <view class="page-subtitle">快捷配置、分类产品和本机数据</view>
     </view>
   </view>
 
-  <view class="template-card card">
-    <view class="template-card-head">
-      <view>
-        <view class="section-name">快捷模板</view>
-        <view class="template-card-subtitle">用于每日快速记录</view>
-      </view>
-      <view
-        class="template-create-button"
-        role="button"
-        hover-class="tap-hover"
-        bindtap="openCreateTemplateForm"
-      >新建</view>
+  <view class="settings-section-title">常用配置</view>
+  <view class="settings-entry card" role="button" hover-class="tap-hover" bindtap="goTemplates">
+    <view class="settings-entry-icon settings-entry-icon-template">
+      <image src="/assets/icons/action-copy.svg" mode="aspectFit" alt="" />
     </view>
-    <view class="template-manage-list" wx:if="{{templates.length}}">
-      <view class="template-manage-row" wx:for="{{templates}}" wx:key="id">
-        <view class="template-manage-info">
-          <view class="template-manage-title">{{item.name}}</view>
-          <view class="template-manage-meta">{{item.timeText}} · {{item.itemCount}} 项 · {{item.previewText}}</view>
-        </view>
-        <view class="template-row-actions">
-          <view
-            class="template-edit-button"
-            role="button"
-            hover-class="tap-hover"
-            data-id="{{item.id}}"
-            bindtap="editTemplate"
-          >编辑</view>
-          <view
-            class="template-delete-button"
-            role="button"
-            hover-class="tap-hover"
-            data-id="{{item.id}}"
-            data-name="{{item.name}}"
-            bindtap="deleteTemplate"
-          >删除</view>
-        </view>
-      </view>
+    <view class="settings-entry-main">
+      <view class="settings-entry-title">快捷模板</view>
+      <view class="settings-entry-meta">{{templatePreviewText}}</view>
     </view>
-    <view class="template-manage-empty" wx:else>
-      还没有模板，可在今日页从记录保存，或在这里新建。
+    <view class="settings-entry-side">
+      <view class="settings-entry-count">{{templateCount}}</view>
+      <view class="settings-entry-chevron">›</view>
     </view>
   </view>
 
-  <view class="category-form card">
-    <view class="field" style="margin-bottom: 0;">
-      <text class="field-label">分类名称</text>
-      <view class="category-input-row">
-        <view class="clearable-input category-clearable-input">
-          <input class="category-input {{categoryError ? 'input-error' : ''}}" maxlength="12" placeholder="如:精华、面霜" value="{{categoryName}}" bindinput="onCategoryInput" aria-label="分类名称" />
-          <view wx:if="{{categoryName}}" class="clear-input-button" role="button" hover-class="tap-hover" aria-label="清空分类名称" catchtap="clearCategoryName">×</view>
-        </view>
-        <view class="add-category {{canSubmit && !submitting ? 'add-category-active' : 'add-category-disabled'}}" role="button" hover-class="button-hover" aria-label="添加分类" aria-disabled="{{!canSubmit || submitting}}" bindtap="addCategory">{{submitting ? '保存中' : '添加'}}</view>
-      </view>
-      <view class="field-error form-error" wx:if="{{categoryError}}" role="alert">{{categoryError}}</view>
+  <view class="settings-entry card" role="button" hover-class="tap-hover" bindtap="goCategories">
+    <view class="settings-entry-icon settings-entry-icon-category">
+      <image src="/assets/icons/product-category.svg" mode="aspectFit" alt="" />
+    </view>
+    <view class="settings-entry-main">
+      <view class="settings-entry-title">分类与产品</view>
+      <view class="settings-entry-meta">{{categoryPreviewText}}</view>
+      <view class="settings-entry-submeta">{{productSummaryText}}</view>
+    </view>
+    <view class="settings-entry-side">
+      <view class="settings-entry-count">{{categoryCount}}</view>
+      <view class="settings-entry-chevron">›</view>
     </view>
   </view>
 
-  <view class="category-section" wx:if="{{categories.length}}">
-    <view class="section-line">
-      <view class="section-name">现有分类</view>
-      <view class="section-count">{{categories.length}} 个</view>
-    </view>
-    <view class="category-list">
-      <view class="category-group" wx:for="{{categories}}" wx:key="id">
-        <view class="category-swipe-item" data-id="{{item.id}}" bindtouchstart="onCategoryTouchStart" bindtouchend="onCategoryTouchEnd">
-          <view class="category-swipe-actions {{item.swiped ? 'category-swipe-actions-active' : ''}}">
-            <view class="category-manage-button" role="button" hover-class="tap-hover" aria-label="维护 {{item.name}} 产品分类" data-name="{{item.name}}" catchtap="openProductManager">
-              <image class="category-action-icon" src="/assets/icons/product-category.svg" mode="aspectFit" alt="" />
-            </view>
-            <view class="category-delete-button {{deletingCategoryId === item.id ? 'delete-button-disabled' : ''}}" role="button" hover-class="tap-hover" aria-label="删除分类 {{item.name}}" aria-disabled="{{deletingCategoryId === item.id}}" data-id="{{item.id}}" data-name="{{item.name}}" catchtap="deleteCategory">
-              <image class="category-action-icon" src="/assets/icons/action-delete.png" mode="aspectFit" alt="" />
-            </view>
-          </view>
-          <view class="category-row {{item.swiped ? 'category-row-open' : ''}}" bindtap="closeCategorySwipe">
-            <view class="category-left">
-              <image class="tag-icon" src="/assets/icons/category-tag.png" mode="aspectFit" alt="" />
-              <text class="category-name">{{item.name}}</text>
-            </view>
-            <view class="category-hint">左滑管理</view>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-  <view class="card empty-state" wx:else>
-    <view class="empty-title">还没有分类</view>
-    <view class="empty-text">添加常用分类后,记录产品会更快。</view>
-  </view>
-
-  <view class="my-tip">提示:仅可删除未被任何护肤记录或库存使用的分类,且至少需要保留一个分类。</view>
-
-  <view class="sheet-mask" wx:if="{{showTemplateForm}}" bindtap="closeTemplateForm"></view>
-  <view
-    class="bottom-sheet template-form-sheet"
-    wx:if="{{showTemplateForm}}"
-    role="dialog"
-    aria-modal="true"
-    catchtouchmove="noop"
-  >
-    <view class="sheet-head">
-      <view class="sheet-title">{{editingTemplateId ? '编辑模板' : '新建模板'}}</view>
-      <button
-        class="close-button"
-        hover-class="button-hover"
-        aria-label="关闭"
-        bindtap="closeTemplateForm"
-      >×</button>
-    </view>
-
-    <view class="field">
-      <text class="field-label">模板名称</text>
-      <input placeholder="例如：日常早 C" value="{{templateForm.name}}" bindinput="onTemplateNameInput" />
-      <view class="field-error" wx:if="{{templateError}}">{{templateError}}</view>
-    </view>
-
-    <view class="segmented template-time-tabs">
-      <view
-        wx:for="{{templateTimeOptions}}"
-        wx:key="value"
-        class="segmented-item {{templateForm.timeOfDay === item.value ? 'segmented-item-active' : ''}}"
-        data-value="{{item.value}}"
-        bindtap="switchTemplateTime"
-        hover-class="tap-hover"
-      >{{item.label}}</view>
-    </view>
-
-    <view class="template-items-head">
-      <view class="section-name">产品内容</view>
-      <view
-        class="template-add-item"
-        role="button"
-        hover-class="tap-hover"
-        bindtap="addTemplateItem"
-      >添加产品</view>
-    </view>
-    <view class="template-form-item" wx:for="{{templateForm.items}}" wx:key="index">
-      <view class="template-item-line">
-        <view class="template-item-index">{{index + 1}}</view>
-        <picker
-          class="picker-bare template-category-picker-wrap"
-          range="{{categoryNames}}"
-          value="{{item.categoryIndex}}"
-          data-index="{{index}}"
-          bindchange="onTemplateItemCategoryPick"
-        >
-          <view class="template-category-picker" role="button" hover-class="tap-hover">
-            <text>{{item.categoryName}}</text>
-            <text class="picker-chevron">›</text>
-          </view>
-        </picker>
-        <input
-          class="template-amount-input"
-          placeholder="用量"
-          value="{{item.amount}}"
-          data-index="{{index}}"
-          data-field="amount"
-          bindinput="onTemplateItemInput"
-        />
-        <view
-          class="template-remove-item"
-          role="button"
-          hover-class="tap-hover"
-          data-index="{{index}}"
-          bindtap="removeTemplateItem"
-        >×</view>
-      </view>
-      <view class="template-item-line template-item-subline">
-        <input
-          class="template-product-input"
-          placeholder="产品名称"
-          value="{{item.productName}}"
-          data-index="{{index}}"
-          data-field="productName"
-          bindinput="onTemplateItemInput"
-        />
-        <view
-          class="template-history-button"
-          role="button"
-          hover-class="tap-hover"
-          data-index="{{index}}"
-          bindtap="openTemplateProductSelector"
-        >历史</view>
-      </view>
-      <view
-        class="template-product-selector"
-        wx:if="{{showTemplateProductSelector && templateProductSelectorIndex === index}}"
-      >
-        <view class="template-product-selector-head">
-          <view class="template-product-selector-title">{{item.categoryName}}历史产品</view>
-          <view
-            class="template-product-selector-close"
-            role="button"
-            hover-class="tap-hover"
-            bindtap="closeTemplateProductSelector"
-          >×</view>
-        </view>
-        <input
-          class="template-product-search-input"
-          placeholder="搜索产品名称"
-          value="{{templateProductSearchKeyword}}"
-          bindinput="onTemplateProductSearchInput"
-        />
-        <scroll-view
-          scroll-y
-          class="template-product-option-list {{filteredTemplateProductOptions.length <= 3 ? 'template-product-option-list-compact' : ''}}"
-        >
-          <view
-            wx:for="{{filteredTemplateProductOptions}}"
-            wx:for-item="productName"
-            wx:key="*this"
-            class="template-product-option"
-            role="button"
-            hover-class="tap-hover"
-            data-name="{{productName}}"
-            bindtap="selectTemplateProduct"
-          >{{productName}}</view>
-          <view wx:if="{{!filteredTemplateProductOptions.length}}" class="template-product-option-empty">
-            没有匹配的历史产品
-          </view>
-        </scroll-view>
-      </view>
-    </view>
-
-    <view class="sheet-actions">
-      <button class="secondary" hover-class="button-hover" bindtap="closeTemplateForm">取消</button>
-      <button
-        class="primary"
-        hover-class="button-hover"
-        disabled="{{!canSubmitTemplate}}"
-        aria-disabled="{{!canSubmitTemplate}}"
-        bindtap="submitTemplateForm"
-      >保存</button>
-    </view>
-  </view>
-
-  <view class="sheet-mask" wx:if="{{showProductManager}}" bindtap="closeProductManager"></view>
-  <view class="bottom-sheet product-manager-sheet" wx:if="{{showProductManager}}" role="dialog" aria-modal="true" catchtouchmove="noop">
-    <view class="sheet-head">
-      <view class="sheet-title">{{productManagerTitle}}</view>
-      <button class="close-button" hover-class="button-hover" aria-label="关闭" bindtap="closeProductManager">×</button>
-    </view>
-
-    <view class="conflict-panel" wx:if="{{productConflicts.length}}">
-      <view class="conflict-title">分类冲突</view>
-      <view class="conflict-row" wx:for="{{productConflicts}}" wx:key="name">
-        <view class="product-info">
-          <view class="product-name">{{item.name}}</view>
-          <view class="product-meta">{{item.categoryText}} · 记录 {{item.recordCount}} · 库存 {{item.stockCount}}</view>
-        </view>
-        <picker class="picker-bare product-category-control" range="{{categoryNames}}" value="{{item.categoryIndex}}" data-name="{{item.name}}" bindchange="onConflictCategoryPick">
-          <view class="product-category-picker product-category-picker-warning" role="button" hover-class="tap-hover" aria-label="统一 {{item.name}} 分类">
-            <text>选分类</text>
-            <text class="picker-chevron">›</text>
-          </view>
-        </picker>
-      </view>
-    </view>
-
-    <view class="category-products" wx:if="{{productManagerProducts.length}}">
-      <view class="category-product-row" wx:for="{{productManagerProducts}}" wx:key="id">
-        <view class="product-info">
-          <view class="product-name">{{item.name}}</view>
-          <view class="product-meta">记录 {{item.recordCount}} · 库存 {{item.stockCount}}</view>
-        </view>
-        <picker class="picker-bare product-category-control" range="{{categoryNames}}" value="{{item.categoryIndex}}" data-id="{{item.id}}" data-name="{{item.name}}" bindchange="onProductCategoryPick">
-          <view class="product-category-picker" role="button" hover-class="tap-hover" aria-label="调整 {{item.name}} 分类">
-            <text>{{item.categoryName}}</text>
-            <text class="picker-chevron">›</text>
-          </view>
-        </picker>
-      </view>
-    </view>
-    <view class="product-empty" wx:else>这个分类下还没有产品</view>
-  </view>
-
+  <view class="settings-section-title data-section-title">数据</view>
   <view class="data-note card card-soft">
     <view class="item-title">数据保存在本机</view>
-    <view class="item-meta">记录、库存和分类使用微信小程序本地存储持久化;不卸载小程序、不清理微信缓存时可长期保留。</view>
+    <view class="item-meta">记录、库存、分类和模板使用微信小程序本地存储持久化；不卸载小程序、不清理微信缓存时可长期保留。</view>
   </view>
 
   <view class="backup-card card">
     <view class="item-title">备份与恢复</view>
-    <view class="item-meta">导出 JSON 备份文件,换设备或清理缓存后可从文件恢复。</view>
+    <view class="item-meta">导出 JSON 备份文件，换设备或清理缓存后可从文件恢复。</view>
     <view class="backup-actions">
       <view class="backup-button backup-button-primary" role="button" hover-class="button-hover" aria-label="导出数据" bindtap="exportData">导出数据</view>
       <view class="backup-button" role="button" hover-class="button-hover" aria-label="导入数据(将覆盖本机数据)" bindtap="importData">导入数据</view>

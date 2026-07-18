@@ -3,7 +3,9 @@
     "pages/today/today",
     "pages/inventory/inventory",
     "pages/stats/stats",
-    "pages/settings/settings"
+    "pages/settings/settings",
+    "pages/templates/templates",
+    "pages/categories/categories"
   ],
   "window": {
     "navigationBarTitleText": "护肤记录",
