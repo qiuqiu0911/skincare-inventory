@@ -442,6 +442,39 @@ function testMonthlyUsageCalendarSummarizesRecords() {
   assert.equal(paddedCalendar.cells[5].date, "2026-08-01");
 }
 
+function testUsageTemplatesApplyAndSkipDuplicates() {
+  reset();
+  const template = store.addUsageTemplate({
+    name: "早间基础",
+    timeOfDay: "morning",
+    items: [
+      { productName: "洁面 A", categoryName: "洁面", amount: "一泵" },
+      { productName: "精华 B", categoryName: "精华", amount: "2 滴" }
+    ]
+  });
+  const firstResult = store.applyUsageTemplate(template.id, { date: "2026-06-07" });
+  const secondResult = store.applyUsageTemplate(template.id, { date: "2026-06-07" });
+
+  assert.equal(firstResult.addedCount, 2);
+  assert.equal(firstResult.skippedCount, 0);
+  assert.equal(secondResult.addedCount, 0);
+  assert.equal(secondResult.skippedCount, 2);
+  assert.deepEqual(
+    store.listTodayRecords("2026-06-07").map((record) => record.productNameSnapshot),
+    ["洁面 A", "精华 B"]
+  );
+
+  store.updateUsageTemplate(template.id, {
+    name: "早间精简",
+    timeOfDay: "morning",
+    items: [{ productName: "洁面 A", categoryName: "洁面", amount: "半泵" }]
+  });
+  assert.equal(store.listUsageTemplates("morning")[0].name, "早间精简");
+
+  store.deleteUsageTemplate(template.id);
+  assert.equal(store.listUsageTemplates().length, 0);
+}
+
 function testInputValidationBoundaries() {
   reset();
   assert.throws(() => store.addCategory("   "), /分类名称不能为空/);
@@ -469,6 +502,11 @@ function testQueryResultsAreCopies() {
   reset();
   const stock = store.addStock({ name: "喷雾", categoryName: "爽肤水", quantity: 1 });
   store.addUsageRecord({ name: "喷雾", categoryName: "爽肤水", date: "2026-06-07" });
+  store.addUsageTemplate({
+    name: "爽肤模板",
+    timeOfDay: "morning",
+    items: [{ productName: "喷雾", categoryName: "爽肤水", amount: "2 喷" }]
+  });
 
   const categories = store.listCategories();
   categories.push({ id: "fake", name: "伪分类", sortOrder: 999 });
@@ -483,6 +521,10 @@ function testQueryResultsAreCopies() {
   const records = store.listTodayRecords("2026-06-07");
   records[0].productNameSnapshot = "被外部改名";
   assert.equal(store.listTodayRecords("2026-06-07")[0].productNameSnapshot, "喷雾");
+
+  const templates = store.listUsageTemplates();
+  templates[0].items[0].productName = "被外部改名";
+  assert.equal(store.listUsageTemplates()[0].items[0].productName, "喷雾");
 }
 
 function testDeleteEmptyCategoryOnly() {
@@ -521,13 +563,20 @@ function testExportAndImportSnapshot() {
     amount: "2 泵",
     date: "2026-06-07"
   });
+  store.addUsageTemplate({
+    name: "备份模板",
+    timeOfDay: "morning",
+    items: [{ productName: "备份精华", categoryName: "精华", amount: "2 泵" }]
+  });
   const snapshot = store.exportStoreSnapshot();
   assert.equal(snapshot.version, 1);
   assert.equal(snapshot.data.records.length, 1);
+  assert.equal(snapshot.data.templates.length, 1);
 
   store.resetStoreForTests();
   store.importStoreSnapshot(JSON.stringify(snapshot));
   assert.equal(store.listTodayRecords("2026-06-07")[0].productNameSnapshot, "备份精华");
+  assert.equal(store.listUsageTemplates()[0].name, "备份模板");
   assert.equal(store.listCategories().some((item) => item.name === "精华"), true);
 }
 
@@ -650,6 +699,7 @@ testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
 testWeeklyUsageMatrixTracksMorningAndEvening();
 testMonthlyUsageCalendarSummarizesRecords();
+testUsageTemplatesApplyAndSkipDuplicates();
 testInputValidationBoundaries();
 testInvalidStockTransitionsThrow();
 testQueryResultsAreCopies();

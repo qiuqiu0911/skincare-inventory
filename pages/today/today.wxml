@@ -44,14 +44,79 @@
   </view>
 
   <view class="bottom-action">
-    <button class="copy-yesterday-button" hover-class="button-hover" aria-label="{{copyActionText}}{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="copyPreviousDateRecords">
+    <button
+      class="copy-yesterday-button"
+      hover-class="button-hover"
+      aria-label="套用{{activeTime === 'morning' ? '早间' : '晚间'}}模板"
+      bindtap="openTemplateSheet"
+    >
       <image class="bottom-action-icon" src="/assets/icons/action-copy.svg" mode="aspectFit" alt="" />
-      <text>{{copyActionText}}</text>
+      <text>套用模板</text>
     </button>
-    <button class="primary add-record-button" hover-class="button-hover" aria-label="添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录" bindtap="openCreateForm">
+    <button
+      class="primary add-record-button"
+      hover-class="button-hover"
+      aria-label="添加{{activeTime === 'morning' ? '早间' : '晚间'}}记录"
+      bindtap="openCreateForm"
+    >
       <view class="add-icon" aria-hidden="true">+</view>
       <text>添加记录</text>
     </button>
+  </view>
+
+  <view class="sheet-mask" wx:if="{{showTemplateSheet}}" bindtap="closeTemplateSheet"></view>
+  <view
+    class="bottom-sheet template-sheet"
+    wx:if="{{showTemplateSheet}}"
+    role="dialog"
+    aria-modal="true"
+    catchtouchmove="noop"
+  >
+    <view class="sheet-head">
+      <view class="sheet-title">快速记录</view>
+      <button
+        class="close-button"
+        hover-class="button-hover"
+        aria-label="关闭"
+        bindtap="closeTemplateSheet"
+      >×</button>
+    </view>
+
+    <view class="template-quick-actions">
+      <view class="template-action-button" role="button" hover-class="tap-hover" bindtap="copyPreviousDateRecords">
+        <view class="template-action-title">{{copyActionText}}</view>
+        <view class="template-action-meta">{{copySourceText}}{{activeTime === 'morning' ? '早间' : '晚间'}}</view>
+      </view>
+      <view class="template-action-button" role="button" hover-class="tap-hover" bindtap="saveActiveRecordsAsTemplate">
+        <view class="template-action-title">保存当前</view>
+        <view class="template-action-meta">生成模板</view>
+      </view>
+    </view>
+
+    <view class="template-section-head">
+      <view class="template-section-title">{{activeTime === 'morning' ? '早间' : '晚间'}}模板</view>
+      <view class="template-manage-link" role="button" hover-class="tap-hover" bindtap="goTemplateManager">管理</view>
+    </view>
+    <view class="template-list" wx:if="{{templates.length}}">
+      <view class="template-row" wx:for="{{templates}}" wx:key="id">
+        <view class="template-row-main">
+          <view class="template-name">{{item.name}}</view>
+          <view class="template-meta">{{item.itemCount}} 项 · {{item.previewText}}</view>
+        </view>
+        <view
+          class="template-apply-button {{applyingTemplateId === item.id ? 'template-apply-button-disabled' : ''}}"
+          role="button"
+          hover-class="tap-hover"
+          aria-disabled="{{applyingTemplateId === item.id}}"
+          data-id="{{item.id}}"
+          bindtap="applyTemplate"
+        >套用</view>
+      </view>
+    </view>
+    <view class="template-empty" wx:else>
+      <view class="empty-title">还没有模板</view>
+      <view class="empty-text">可以先记录一次，再把当前早晚记录保存成模板。</view>
+    </view>
   </view>
 
   <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm"></view>

@@ -78,6 +78,10 @@ function copySourceText(dateKey) {
   return dateKey === store.todayKey() ? "昨日" : "前一天";
 }
 
+function timeText(timeOfDay) {
+  return timeOfDay === "evening" ? "晚间" : "早间";
+}
+
 function defaultTimeOfDay(date = new Date()) {
   return date.getHours() < 12 ? "morning" : "evening";
 }
@@ -150,8 +154,11 @@ Page({
     submitting: false,
     swipedRecordId: "",
     showForm: false,
+    showTemplateSheet: false,
     showProductSelector: false,
     productSearchKeyword: "",
+    templates: [],
+    applyingTemplateId: "",
     draggingRecordId: "",
     editingId: "",
     formErrors: {},
@@ -174,7 +181,7 @@ Page({
   },
 
   onShow() {
-    if (!this.hasManualTimeSelection && !this.data.showForm) {
+    if (!this.hasManualTimeSelection && !this.data.showForm && !this.data.showTemplateSheet) {
       const activeTime = defaultTimeOfDay();
       if (activeTime !== this.data.activeTime) {
         this.setData({
@@ -232,6 +239,7 @@ Page({
       };
       const productOptions = store.productOptions(categoryName);
       const records = store.listTodayRecords(viewDate);
+      const templates = store.listUsageTemplates(this.data.activeTime);
       this.setData({
         viewDate,
         viewDateText: viewDateText(viewDate),
@@ -241,6 +249,7 @@ Page({
         categories,
         productOptions,
         filteredProductOptions: filterProductOptions(productOptions, this.data.productSearchKeyword),
+        templates,
         records,
         activeRecords: records
           .filter((record) => record.timeOfDay === this.data.activeTime)
@@ -253,7 +262,7 @@ Page({
         canSubmit: canSubmitRecord(form, this.data.submitting)
       });
     } catch (error) {
-      this.setData({ categories: [], productOptions: [], records: [], activeRecords: [] });
+      this.setData({ categories: [], productOptions: [], templates: [], records: [], activeRecords: [] });
       wx.showToast({ title: error.message, icon: "none" });
     }
   },
@@ -287,7 +296,7 @@ Page({
   },
 
   onPageTouchStart(event) {
-    if (this.data.showForm || this.recordGestureActive) {
+    if (this.data.showForm || this.data.showTemplateSheet || this.recordGestureActive) {
       return;
     }
     const touch = event.touches && event.touches[0];
@@ -305,7 +314,7 @@ Page({
       this.pageTouchStartY = undefined;
       return;
     }
-    if (this.data.showForm || this.pageTouchStartX === undefined) {
+    if (this.data.showForm || this.data.showTemplateSheet || this.pageTouchStartX === undefined) {
       return;
     }
     const touch = event.changedTouches && event.changedTouches[0];
@@ -326,10 +335,12 @@ Page({
 
   switchTime(event) {
     const activeTime = event.currentTarget.dataset.value;
+    const templates = store.listUsageTemplates(activeTime);
     this.hasManualTimeSelection = true;
     this.setData({
       activeTime,
       swipedRecordId: "",
+      templates,
       activeRecords: this.data.records
         .filter((record) => record.timeOfDay === activeTime)
         .map((record) => ({ ...record, swiped: false }))
@@ -497,6 +508,26 @@ Page({
     this.refresh();
   },
 
+  openTemplateSheet() {
+    this.setData({
+      showTemplateSheet: true,
+      applyingTemplateId: ""
+    });
+    this.refresh();
+  },
+
+  closeTemplateSheet() {
+    this.setData({
+      showTemplateSheet: false,
+      applyingTemplateId: ""
+    });
+  },
+
+  goTemplateManager() {
+    this.closeTemplateSheet();
+    wx.switchTab({ url: "/pages/settings/settings" });
+  },
+
   noop() {},
 
   editRecord(event) {
@@ -556,6 +587,7 @@ Page({
         copiedCount += 1;
       });
       this.refresh();
+      this.closeTemplateSheet();
       wx.showToast({
         title: copiedCount ? `已复制 ${copiedCount} 项` : "这天已存在",
         icon: copiedCount ? "success" : "none"
@@ -563,6 +595,68 @@ Page({
     } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
     }
+  },
+
+  applyTemplate(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id || this.data.applyingTemplateId) {
+      return;
+    }
+    this.setData({ applyingTemplateId: id });
+    try {
+      const result = store.applyUsageTemplate(id, {
+        date: this.data.viewDate || store.todayKey(),
+        timeOfDay: this.data.activeTime
+      });
+      this.refresh();
+      this.closeTemplateSheet();
+      wx.showToast({
+        title: result.addedCount ? `已添加 ${result.addedCount} 项` : "这天已存在",
+        icon: result.addedCount ? "success" : "none"
+      });
+    } catch (error) {
+      wx.showToast({ title: error.message || "套用失败", icon: "none" });
+    } finally {
+      this.setData({ applyingTemplateId: "" });
+    }
+  },
+
+  saveActiveRecordsAsTemplate() {
+    const records = this.data.activeRecords.map((record) => ({
+      productName: record.productNameSnapshot,
+      categoryName: record.categoryNameSnapshot,
+      amount: record.amount
+    }));
+    if (!records.length) {
+      wx.showToast({ title: `${timeText(this.data.activeTime)}还没有记录`, icon: "none" });
+      return;
+    }
+    const defaultName = `${timeText(this.data.activeTime)}模板`;
+    wx.showModal({
+      title: "保存为模板",
+      content: "后续可在“我的”里调整模板内容。",
+      editable: true,
+      placeholderText: defaultName,
+      confirmText: "保存",
+      confirmColor: "#111827",
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+        try {
+          const name = trim(result.content) || defaultName;
+          store.addUsageTemplate({
+            name,
+            timeOfDay: this.data.activeTime,
+            items: records
+          });
+          this.refresh();
+          wx.showToast({ title: "已保存模板", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message || "保存失败", icon: "none" });
+        }
+      }
+    });
   },
 
   onInput(event) {

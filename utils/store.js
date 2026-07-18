@@ -7,6 +7,8 @@ const cloudConfig = require("./cloudConfig");
 const DEFAULT_CATEGORIES = ["洁面", "爽肤水", "精华", "乳霜", "防晒", "彩妆"];
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NEXT_STOCK_STATUSES = ["active", "finished"];
+const MAX_TEMPLATE_NAME_LENGTH = 20;
+const MAX_TEMPLATE_AMOUNT_LENGTH = 30;
 let cloudSyncTimer = null;
 let cloudInitialized = false;
 let cloudSyncing = false;
@@ -32,6 +34,17 @@ function cloneItems(items) {
   return (Array.isArray(items) ? items : []).map(cloneItem);
 }
 
+function cloneTemplate(template) {
+  return {
+    ...template,
+    items: cloneItems(template && template.items)
+  };
+}
+
+function cloneTemplates(templates) {
+  return (Array.isArray(templates) ? templates : []).map(cloneTemplate);
+}
+
 function cloneStore(store) {
   return {
     ...(store || {}),
@@ -39,6 +52,7 @@ function cloneStore(store) {
     products: cloneItems(store && store.products),
     stocks: cloneItems(store && store.stocks),
     records: cloneItems(store && store.records),
+    templates: cloneTemplates(store && store.templates),
     sync: {
       pendingCloudSync: false,
       lastSyncedAt: "",
@@ -74,6 +88,10 @@ function normalizePositiveInteger(value) {
     throw new Error("数量需为 1 或以上整数");
   }
   return quantity;
+}
+
+function normalizeTimeOfDay(value) {
+  return value === "evening" ? "evening" : "morning";
 }
 
 function todayKey(date = new Date()) {
@@ -146,6 +164,7 @@ function emptyStore() {
     products: [],
     stocks: [],
     records: [],
+    templates: [],
     sync: {
       pendingCloudSync: false,
       lastSyncedAt: "",
@@ -219,7 +238,8 @@ function cloudStorePayload(store) {
     categories: cloneItems(store.categories),
     products: cloneItems(store.products),
     stocks: cloneItems(store.stocks),
-    records: cloneItems(store.records)
+    records: cloneItems(store.records),
+    templates: cloneTemplates(store.templates)
   };
 }
 
@@ -229,7 +249,8 @@ function storeFromCloudPayload(payload) {
     categories: cloneItems(payload && payload.categories),
     products: cloneItems(payload && payload.products),
     stocks: cloneItems(payload && payload.stocks),
-    records: cloneItems(payload && payload.records)
+    records: cloneItems(payload && payload.records),
+    templates: cloneTemplates(payload && payload.templates)
   };
 }
 
@@ -252,7 +273,8 @@ function normalizeImportedStore(payload) {
     categories: normalizeImportedItems(data && data.categories, "分类"),
     products: normalizeImportedItems(data && data.products, "产品"),
     stocks: normalizeImportedItems(data && data.stocks, "库存"),
-    records: normalizeImportedItems(data && data.records, "记录")
+    records: normalizeImportedItems(data && data.records, "记录"),
+    templates: normalizeImportedItems(data && data.templates ? data.templates : [], "模板")
   };
   if (nextStore.categories.length === 0) {
     throw new Error("导入数据至少需要包含一个分类");
@@ -411,7 +433,7 @@ function findOrCreateProduct(store, input) {
 function addUsageRecord(input) {
   const productResult = findOrCreateProduct(ensureSeedData(), input);
   const date = normalizeDate(input.date) || todayKey();
-  const timeOfDay = input.timeOfDay === "evening" ? "evening" : "morning";
+  const timeOfDay = normalizeTimeOfDay(input.timeOfDay);
   const record = {
     id: createId("usage"),
     date,
@@ -432,6 +454,186 @@ function addUsageRecord(input) {
   return cloneItem(record);
 }
 
+function normalizeTemplateItems(items) {
+  const normalizedItems = (Array.isArray(items) ? items : [])
+    .map((item) => ({
+      productName: trim(item && (item.productName || item.name)),
+      categoryName: trim(item && item.categoryName) || "未分类",
+      amount: trim(item && item.amount)
+    }))
+    .filter((item) => item.productName);
+  if (!normalizedItems.length) {
+    throw new Error("模板至少需要一个产品");
+  }
+  const amountTooLong = normalizedItems.some((item) => item.amount.length > MAX_TEMPLATE_AMOUNT_LENGTH);
+  if (amountTooLong) {
+    throw new Error(`模板用量请控制在 ${MAX_TEMPLATE_AMOUNT_LENGTH} 字以内`);
+  }
+  return normalizedItems;
+}
+
+function normalizeTemplateName(value) {
+  const name = trim(value);
+  if (!name) {
+    throw new Error("模板名称不能为空");
+  }
+  if (name.length > MAX_TEMPLATE_NAME_LENGTH) {
+    throw new Error(`模板名称请控制在 ${MAX_TEMPLATE_NAME_LENGTH} 字以内`);
+  }
+  return name;
+}
+
+function compareTemplate(left, right) {
+  const leftOrder = Number(left.sortOrder);
+  const rightOrder = Number(right.sortOrder);
+  const normalizedLeftOrder = Number.isFinite(leftOrder) ? leftOrder : Number.MAX_SAFE_INTEGER;
+  const normalizedRightOrder = Number.isFinite(rightOrder) ? rightOrder : Number.MAX_SAFE_INTEGER;
+  return normalizedLeftOrder - normalizedRightOrder
+    || String(left.createdAt || "").localeCompare(String(right.createdAt || ""))
+    || String(left.name || "").localeCompare(String(right.name || ""), "zh-CN");
+}
+
+function normalizeUsageTemplate(input, existingTemplate = {}) {
+  const timestamp = nowIso();
+  return {
+    ...existingTemplate,
+    name: normalizeTemplateName(input.name),
+    timeOfDay: normalizeTimeOfDay(input.timeOfDay || existingTemplate.timeOfDay),
+    items: normalizeTemplateItems(input.items),
+    sortOrder: Number.isFinite(Number(existingTemplate.sortOrder))
+      ? Number(existingTemplate.sortOrder)
+      : 0,
+    createdAt: existingTemplate.createdAt || timestamp,
+    updatedAt: timestamp
+  };
+}
+
+function templateView(template) {
+  const items = cloneItems(template.items);
+  return {
+    ...cloneTemplate(template),
+    items,
+    itemCount: items.length,
+    previewText: items.map((item) => item.productName).slice(0, 3).join("、")
+  };
+}
+
+function listUsageTemplates(timeOfDay = "") {
+  const targetTimeOfDay = timeOfDay === "morning" || timeOfDay === "evening" ? timeOfDay : "";
+  return ensureSeedData()
+    .templates
+    .filter((template) => !targetTimeOfDay || template.timeOfDay === targetTimeOfDay)
+    .sort(compareTemplate)
+    .map(templateView);
+}
+
+function addUsageTemplate(input) {
+  const store = ensureSeedData();
+  const template = {
+    ...normalizeUsageTemplate(input),
+    id: createId("tpl"),
+    sortOrder: store.templates.length
+  };
+  writeStoreAndScheduleCloudSync({
+    ...store,
+    templates: [template, ...store.templates]
+  });
+  return templateView(template);
+}
+
+function updateUsageTemplate(id, input) {
+  const store = ensureSeedData();
+  const existing = store.templates.find((template) => template.id === id);
+  if (!existing) {
+    throw new Error("模板不存在");
+  }
+  const template = {
+    ...normalizeUsageTemplate(input, existing),
+    id
+  };
+  writeStoreAndScheduleCloudSync({
+    ...store,
+    templates: store.templates.map((item) => (item.id === id ? template : item))
+  });
+  return templateView(template);
+}
+
+function deleteUsageTemplate(id) {
+  const store = ensureSeedData();
+  writeStoreAndScheduleCloudSync({
+    ...store,
+    templates: store.templates.filter((template) => template.id !== id)
+  });
+}
+
+function usageRecordKey(record) {
+  return [
+    record.timeOfDay,
+    record.productNameSnapshot || record.productName,
+    record.categoryNameSnapshot || record.categoryName
+  ].join("|");
+}
+
+function applyUsageTemplate(id, input = {}) {
+  const store = ensureSeedData();
+  const template = store.templates.find((item) => item.id === id);
+  if (!template) {
+    throw new Error("模板不存在");
+  }
+  const date = normalizeDate(input.date) || todayKey();
+  const timeOfDay = normalizeTimeOfDay(input.timeOfDay || template.timeOfDay);
+  const existingKeys = new Set(
+    store.records
+      .filter((record) => record.date === date && record.timeOfDay === timeOfDay)
+      .map(usageRecordKey)
+  );
+  const timestamp = nowIso();
+  let nextStore = store;
+  const records = [];
+  let skippedCount = 0;
+
+  normalizeTemplateItems(template.items).forEach((item) => {
+    const templateKey = [timeOfDay, item.productName, item.categoryName].join("|");
+    if (existingKeys.has(templateKey)) {
+      skippedCount += 1;
+      return;
+    }
+    const productResult = findOrCreateProduct(nextStore, {
+      name: item.productName,
+      categoryName: item.categoryName
+    });
+    nextStore = productResult.store;
+    const record = {
+      id: createId("usage"),
+      date,
+      timeOfDay,
+      productId: productResult.product.id,
+      stockItemId: "",
+      productNameSnapshot: productResult.product.name,
+      categoryNameSnapshot: productResult.category.name,
+      amount: item.amount,
+      displayOrder: nextRecordDisplayOrder(nextStore, date, timeOfDay),
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    records.push(record);
+    nextStore = {
+      ...nextStore,
+      records: [record, ...nextStore.records]
+    };
+    existingKeys.add(usageRecordKey(record));
+  });
+
+  if (records.length) {
+    writeStoreAndScheduleCloudSync(nextStore);
+  }
+  return {
+    addedCount: records.length,
+    skippedCount,
+    records: records.map(cloneItem)
+  };
+}
+
 function updateUsageRecord(id, input) {
   const store = ensureSeedData();
   const existing = store.records.find((record) => record.id === id);
@@ -440,7 +642,7 @@ function updateUsageRecord(id, input) {
   }
   const productResult = findOrCreateProduct(store, input);
   const date = normalizeDate(input.date) || existing.date;
-  const timeOfDay = input.timeOfDay === "evening" ? "evening" : "morning";
+  const timeOfDay = normalizeTimeOfDay(input.timeOfDay);
   const record = {
     ...existing,
     date,
@@ -1141,10 +1343,13 @@ function resetStoreForTests() {
 module.exports = {
   addCategory,
   addStock,
+  addUsageTemplate,
   addUsageRecord,
+  applyUsageTemplate,
   cloudSyncStatus,
   deleteCategory,
   deleteStock,
+  deleteUsageTemplate,
   deleteUsageRecord,
   flushCloudSync,
   ensureSeedData,
@@ -1156,6 +1361,7 @@ module.exports = {
   listProducts,
   listStocks,
   listTodayRecords,
+  listUsageTemplates,
   monthlyUsageCalendar,
   productOptions,
   refreshFromCloud,
@@ -1167,6 +1373,7 @@ module.exports = {
   updateProductCategory,
   updateStock,
   updateStockStatus,
+  updateUsageTemplate,
   updateUsageRecord,
   weekDaysContaining,
   weeklyUsageMatrix,
