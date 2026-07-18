@@ -396,6 +396,52 @@ function testWeeklyUsageMatrixTracksMorningAndEvening() {
   assert.deepEqual(row.days["2026-06-03"], { morning: true, evening: false });
 }
 
+function testMonthlyUsageCalendarSummarizesRecords() {
+  reset();
+  store.addUsageRecord({
+    name: "精华 A",
+    categoryName: "精华",
+    date: "2026-06-02",
+    timeOfDay: "morning"
+  });
+  store.addUsageRecord({
+    name: "精华 A",
+    categoryName: "精华",
+    date: "2026-06-02",
+    timeOfDay: "evening"
+  });
+  store.addUsageRecord({
+    name: "面霜 B",
+    categoryName: "乳霜",
+    date: "2026-06-15",
+    timeOfDay: "evening"
+  });
+  store.addUsageRecord({
+    name: "防晒 C",
+    categoryName: "防晒",
+    date: "2026-07-01",
+    timeOfDay: "morning"
+  });
+
+  const calendar = store.monthlyUsageCalendar("2026-06-15", "2026-06-02", 1);
+  const selectedDay = calendar.cells.find((item) => item.date === "2026-06-02");
+  const paddedCalendar = store.monthlyUsageCalendar("2026-08-01", "2026-08-01", 1);
+
+  assert.equal(calendar.monthKey, "2026-06");
+  assert.equal(calendar.cells.length, 35);
+  assert.equal(calendar.weeks.length, 5);
+  assert.equal(calendar.recordCount, 3);
+  assert.equal(calendar.usedDayCount, 2);
+  assert.equal(calendar.productCount, 2);
+  assert.equal(selectedDay.isSelected, true);
+  assert.equal(selectedDay.recordCount, 2);
+  assert.equal(selectedDay.productCount, 1);
+  assert.equal(selectedDay.morning, true);
+  assert.equal(selectedDay.evening, true);
+  assert.equal(paddedCalendar.cells[0].inMonth, false);
+  assert.equal(paddedCalendar.cells[5].date, "2026-08-01");
+}
+
 function testInputValidationBoundaries() {
   reset();
   assert.throws(() => store.addCategory("   "), /分类名称不能为空/);
@@ -603,6 +649,7 @@ testResolveProductCategoryListsAndFixesConflicts();
 testUpdateStockKeepsLifecycleState();
 testWeeklyStatsComparesPreviousWeek();
 testWeeklyUsageMatrixTracksMorningAndEvening();
+testMonthlyUsageCalendarSummarizesRecords();
 testInputValidationBoundaries();
 testInvalidStockTransitionsThrow();
 testQueryResultsAreCopies();

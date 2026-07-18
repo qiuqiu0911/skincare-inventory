@@ -929,6 +929,87 @@ function weeklyUsageMatrix(baseDateKey = todayKey(), firstWeekday = localFirstWe
   };
 }
 
+function monthlyUsageCalendar(
+  baseDateKey = todayKey(),
+  selectedDateKey = baseDateKey,
+  firstWeekday = localFirstWeekday()
+) {
+  const store = ensureSeedData();
+  const baseDate = parseLocalDate(normalizeDate(baseDateKey || todayKey()) || todayKey());
+  const selectedDate = normalizeDate(selectedDateKey || todayKey(baseDate)) || todayKey(baseDate);
+  const year = baseDate.getFullYear();
+  const monthIndex = baseDate.getMonth();
+  const month = monthIndex + 1;
+  const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+  const firstDate = new Date(year, monthIndex, 1);
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const leadingDays = (firstDate.getDay() - firstWeekday + 7) % 7;
+  const totalCells = Math.ceil((leadingDays + daysInMonth) / 7) * 7;
+  const recordsByDate = store.records.reduce((summaryMap, record) => {
+    if (!String(record.date || "").startsWith(monthKey)) {
+      return summaryMap;
+    }
+    const records = summaryMap.get(record.date) || [];
+    records.push(record);
+    summaryMap.set(record.date, records);
+    return summaryMap;
+  }, new Map());
+  const monthProducts = new Set();
+
+  const cells = Array.from({ length: totalCells }, (_, index) => {
+    const day = index - leadingDays + 1;
+    if (day < 1 || day > daysInMonth) {
+      return {
+        key: `blank_${monthKey}_${index}`,
+        date: "",
+        day: "",
+        inMonth: false,
+        isToday: false,
+        isSelected: false,
+        hasRecords: false,
+        recordCount: 0,
+        productCount: 0,
+        morning: false,
+        evening: false
+      };
+    }
+    const date = todayKey(new Date(year, monthIndex, day));
+    const records = recordsByDate.get(date) || [];
+    const dayProducts = new Set(records.map((record) => record.productNameSnapshot).filter(Boolean));
+    dayProducts.forEach((productName) => monthProducts.add(productName));
+    return {
+      key: date,
+      date,
+      day: String(day),
+      inMonth: true,
+      isToday: date === todayKey(),
+      isSelected: date === selectedDate,
+      hasRecords: records.length > 0,
+      recordCount: records.length,
+      productCount: dayProducts.size,
+      morning: records.some((record) => record.timeOfDay !== "evening"),
+      evening: records.some((record) => record.timeOfDay === "evening")
+    };
+  });
+
+  return {
+    year,
+    month,
+    monthKey,
+    firstWeekday,
+    daysInMonth,
+    recordCount: Array.from(recordsByDate.values())
+      .reduce((count, records) => count + records.length, 0),
+    usedDayCount: recordsByDate.size,
+    productCount: monthProducts.size,
+    cells,
+    weeks: Array.from(
+      { length: Math.ceil(cells.length / 7) },
+      (_, index) => cells.slice(index * 7, index * 7 + 7)
+    )
+  };
+}
+
 async function initCloudSync(options = {}) {
   if (!hasCloudRuntime()) {
     return { enabled: false, reason: "wx.cloud unavailable" };
@@ -1075,6 +1156,7 @@ module.exports = {
   listProducts,
   listStocks,
   listTodayRecords,
+  monthlyUsageCalendar,
   productOptions,
   refreshFromCloud,
   reorderUsageRecords,

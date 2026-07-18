@@ -1,14 +1,28 @@
 <view class="page review-page {{activeTab === '3days' ? 'review-page-compact' : ''}}">
   <view class="page-head">
     <view>
-      <view class="page-title">本周回看</view>
+      <view class="page-title">{{pageTitle}}</view>
       <view class="page-date">{{rangeText}}</view>
     </view>
   </view>
 
   <view class="segmented review-tabs" role="tablist">
-    <view wx:for="{{tabs}}" wx:key="value" class="segmented-item {{activeTab === item.value ? 'segmented-item-active' : ''}}" role="tab" aria-selected="{{activeTab === item.value}}" data-value="{{item.value}}" bindtap="switchTab" hover-class="tap-hover">
-      <image class="tab-icon" src="{{activeTab === item.value ? item.activeIconPath : item.iconPath}}" mode="aspectFit" alt="" />
+    <view
+      wx:for="{{tabs}}"
+      wx:key="value"
+      class="segmented-item {{activeTab === item.value ? 'segmented-item-active' : ''}}"
+      role="tab"
+      aria-selected="{{activeTab === item.value}}"
+      data-value="{{item.value}}"
+      bindtap="switchTab"
+      hover-class="tap-hover"
+    >
+      <image
+        class="tab-icon"
+        src="{{activeTab === item.value ? item.activeIconPath : item.iconPath}}"
+        mode="aspectFit"
+        alt=""
+      />
       <text>{{item.label}}</text>
     </view>
   </view>
@@ -20,7 +34,14 @@
           <view class="day-title">{{item.label}}</view>
           <view class="day-date">{{item.shortDate}}</view>
         </view>
-        <view class="makeup-button" role="button" hover-class="tap-hover" aria-label="为 {{item.label}} {{item.shortDate}} 补记" data-date="{{item.date}}" bindtap="addRecordForDay">补记</view>
+        <view
+          class="makeup-button"
+          role="button"
+          hover-class="tap-hover"
+          aria-label="为 {{item.label}} {{item.shortDate}} 补记"
+          data-date="{{item.date}}"
+          bindtap="addRecordForDay"
+        >补记</view>
       </view>
       <view class="slot-block">
         <view class="slot-title morning-title">
@@ -49,7 +70,113 @@
     </view>
   </view>
 
-  <view wx:if="{{activeTab === 'week'}}" class="week-panel" bindtouchstart="onWeekTouchStart" bindtouchend="onWeekTouchEnd">
+  <view wx:if="{{activeTab === 'month'}}" class="month-panel">
+    <view class="calendar-card card">
+      <view class="calendar-head">
+        <view
+          class="calendar-nav-button"
+          role="button"
+          hover-class="tap-hover"
+          aria-label="上个月"
+          bindtap="goPreviousMonth"
+        >‹</view>
+        <view class="calendar-title-block">
+          <view class="calendar-title">{{calendar.monthLabel}}</view>
+          <view class="calendar-subtitle">{{calendar.summaryText}}</view>
+        </view>
+        <view
+          class="calendar-nav-button"
+          role="button"
+          hover-class="tap-hover"
+          aria-label="下个月"
+          bindtap="goNextMonth"
+        >›</view>
+      </view>
+      <view class="calendar-weekdays">
+        <view wx:for="{{calendar.weekdays}}" wx:key="*this" class="calendar-weekday">周{{item}}</view>
+      </view>
+      <view class="calendar-grid">
+        <view
+          wx:for="{{calendar.cells}}"
+          wx:key="key"
+          class="{{item.className}}"
+          role="button"
+          hover-class="tap-hover"
+          aria-label="{{item.ariaLabel}}"
+          data-date="{{item.date}}"
+          bindtap="selectCalendarDay"
+        >
+          <text class="calendar-day-number">{{item.day}}</text>
+          <view class="calendar-usage-mark" wx:if="{{item.hasRecords}}">
+            <text class="{{item.morningClass}}"></text>
+            <text class="{{item.eveningClass}}"></text>
+          </view>
+          <text class="calendar-record-count" wx:if="{{item.recordCount}}">{{item.recordCount}}</text>
+        </view>
+      </view>
+      <view class="calendar-actions">
+        <picker mode="date" value="{{selectedDay.date}}" bindchange="onCalendarDatePick">
+          <view class="calendar-picker-button" role="button" hover-class="tap-hover">切换日期 ›</view>
+        </picker>
+        <view
+          class="calendar-today-button"
+          role="button"
+          hover-class="tap-hover"
+          bindtap="goCurrentMonth"
+        >回到今天</view>
+      </view>
+    </view>
+
+    <view class="selected-day-card card">
+      <view class="selected-day-head">
+        <view class="selected-day-title-block">
+          <view class="selected-day-title">{{selectedDay.title}}</view>
+          <view class="selected-day-meta">{{selectedDay.metaText}}</view>
+        </view>
+        <view
+          class="makeup-button"
+          role="button"
+          hover-class="tap-hover"
+          aria-label="为 {{selectedDay.date}} 补记"
+          data-date="{{selectedDay.date}}"
+          bindtap="addRecordForDay"
+        >补记</view>
+      </view>
+      <view class="selected-day-slots">
+        <view class="slot-block selected-slot-block">
+          <view class="slot-title morning-title">
+            <image class="slot-title-icon" src="/assets/icons/time-morning.png" mode="aspectFit" alt="早间" />
+          </view>
+          <view class="slot-list">
+            <view class="slot-row" wx:for="{{selectedDay.morning}}" wx:key="id">
+              <text>{{item.productNameSnapshot}}</text>
+              <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
+            </view>
+            <view class="empty-line" wx:if="{{!selectedDay.morning.length}}">未记录</view>
+          </view>
+        </view>
+        <view class="slot-block selected-slot-block">
+          <view class="slot-title evening-title">
+            <image class="slot-title-icon" src="/assets/icons/time-evening.png" mode="aspectFit" alt="晚间" />
+          </view>
+          <view class="slot-list">
+            <view class="slot-row" wx:for="{{selectedDay.evening}}" wx:key="id">
+              <text>{{item.productNameSnapshot}}</text>
+              <text class="slot-amount" wx:if="{{item.amount}}">{{item.amount}}</text>
+            </view>
+            <view class="empty-line" wx:if="{{!selectedDay.evening.length}}">未记录</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view
+    wx:if="{{activeTab === 'week'}}"
+    class="week-panel"
+    bindtouchstart="onWeekTouchStart"
+    bindtouchend="onWeekTouchEnd"
+  >
     <view class="week-card card" wx:if="{{week.rows.length}}">
       <view class="week-head">
         <view class="week-title">本周使用概览</view>
@@ -62,7 +189,11 @@
       <view class="week-grid-head">
         <view class="product-col">产品名称</view>
         <view class="day-cols">
-          <view wx:for="{{week.days}}" wx:key="date" class="day-col {{item.isToday ? 'today-col' : ''}}">{{item.label}}</view>
+          <view
+            wx:for="{{week.days}}"
+            wx:key="date"
+            class="day-col {{item.isToday ? 'today-col' : ''}}"
+          >{{item.label}}</view>
         </view>
       </view>
       <view class="week-row" wx:for="{{week.rows}}" wx:key="productName">
