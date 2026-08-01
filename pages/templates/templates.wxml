@@ -43,13 +43,17 @@
     <view class="empty-action template-create-button" role="button" hover-class="tap-hover" bindtap="openCreateTemplateForm">新建模板</view>
   </view>
 
-  <view class="sheet-mask" wx:if="{{showTemplateForm}}" bindtap="closeTemplateForm"></view>
+  <view
+    class="sheet-mask"
+    wx:if="{{showTemplateForm}}"
+    bindtap="closeTemplateForm"
+    catchtouchmove="noop"
+  ></view>
   <view
     class="bottom-sheet template-form-sheet"
     wx:if="{{showTemplateForm}}"
     role="dialog"
     aria-modal="true"
-    catchtouchmove="noop"
   >
     <view class="sheet-head">
       <view class="sheet-title">{{editingTemplateId ? '编辑模板' : '新建模板'}}</view>
