@@ -179,6 +179,23 @@
   white-space: nowrap;
 }
 
+.stock-date-line {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stock-date-duration {
+  margin-left: var(--space-1);
+  color: var(--color-text-tertiary);
+}
+
 .stock-actions {
   display: flex;
   align-items: center;

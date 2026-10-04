@@ -77,6 +77,44 @@ function sortStocks(stocks, sortMode) {
   });
 }
 
+function parseDateKey(dateKey) {
+  if (!DATE_KEY_PATTERN.test(dateKey || "")) {
+    return null;
+  }
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function elapsedDays(startDateKey, endDateKey = store.todayKey()) {
+  const start = parseDateKey(startDateKey);
+  const end = parseDateKey(endDateKey);
+  if (!start || !end) {
+    return 0;
+  }
+  return Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1);
+}
+
+function stockDateView(stock) {
+  const currentDateKey = store.todayKey();
+  const openedDays = elapsedDays(stock.openedDate, currentDateKey);
+  const usedDays = elapsedDays(stock.openedDate, stock.finishedDate);
+  return {
+    ...stock,
+    openedDateLabel: stock.openedDate
+      ? (stock.openedDate === currentDateKey ? "今天开瓶" : `开瓶：${stock.openedDate}`)
+      : "",
+    openingDurationLabel: stock.openedDate && stock.status === "active"
+      ? `已开瓶 ${openedDays} 天`
+      : "",
+    lifecycleLabel: stock.status === "finished" && stock.openedDate && stock.finishedDate
+      ? `开瓶：${stock.openedDate} → 空瓶：${stock.finishedDate}`
+      : "",
+    usageDurationLabel: stock.status === "finished" && usedDays
+      ? `使用 ${usedDays} 天`
+      : ""
+  };
+}
+
 Page({
   data: {
     categories: [],
@@ -158,7 +196,7 @@ Page({
         emptyText: meta.emptyText,
         stocks: sortStocks(allStocks.filter((stock) => stock.status === nextStatus), this.data.sortMode)
           .map((stock) => ({
-            ...stock,
+            ...stockDateView(stock),
             swiped: stock.id === this.data.swipedStockId,
             swipeClass: stock.id === this.data.swipedStockId
               ? (stock.status === "stocked" ? "stock-card-front-open-three" : "stock-card-front-open-two")

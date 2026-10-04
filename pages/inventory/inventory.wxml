@@ -50,8 +50,14 @@
             <view class="stock-meta">
               <text>分类: {{item.categoryNameSnapshot}} | {{item.capacitySnapshot || '不详'}} · {{item.quantity}} 件</text>
               <text wx:if="{{item.expiryDateSnapshot && item.status === 'stocked'}}"> · 到期: {{item.expiryDateSnapshot}}</text>
-              <text wx:if="{{item.openedDate && item.status === 'active'}}"> · 开瓶: {{item.openedDate}}</text>
-              <text wx:if="{{item.finishedDate && item.status === 'finished'}}"> · 空瓶: {{item.finishedDate}}</text>
+            </view>
+            <view wx:if="{{item.status === 'active' && item.openedDateLabel}}" class="stock-date-line">
+              <text>{{item.openedDateLabel}}</text>
+              <text class="stock-date-duration">· {{item.openingDurationLabel}}</text>
+            </view>
+            <view wx:if="{{item.status === 'finished' && item.lifecycleLabel}}" class="stock-date-line">
+              <text>{{item.lifecycleLabel}}</text>
+              <text class="stock-date-duration">· {{item.usageDurationLabel}}</text>
             </view>
           </view>
           <view class="stock-actions" wx:if="{{item.status === 'stocked' || item.status === 'active'}}">
